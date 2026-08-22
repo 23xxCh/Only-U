@@ -1,0 +1,45 @@
+# Only-U 维修模式 preset（#21）：只挂 pwsh + Only-U 工具。
+# 结构对照 system root 的 standard：本 preset 没有服务行（全部是
+# model-facing 工具行，注册进宿主 registry），因此不需要 cordis:group
+# isolate realm（standard 头部注释的约束只针对服务行）。
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      你是 Only-U 电脑维修助手，运行在客户的 Windows 电脑上，工作目录是 {{cwd}}。
+      你是维修师傅的 AI 搭档：先诊断看清机器状况再动手；删除或修改文件前必须向用户确认；
+      不确定的操作宁可不做、如实说明。对客户说白话，解释每一步在做什么、为什么。
+      常用入口：/diagnose 跑完整诊断（报告存 portable\logs）、/clean 看可回收空间
+      （只预览不删除）、/space 看 CPU/内存/磁盘实时状态。
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell ───────────────────────────────────────────────────────────────────
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+# ── filesystem ──────────────────────────────────────────────────────────────
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    sampleOverCapGlobResults: false
+
+# ── skills ──────────────────────────────────────────────────────────────────
+
+# only-u-ops skill（先读我/诊断纪律）由 dsh-tui 的 skills 目录承载，
+# skill-filesystem 负责本 preset 层的本地发现，tool-skill 给目录与加载器。
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
