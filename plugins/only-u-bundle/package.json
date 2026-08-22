@@ -1,0 +1,26 @@
+{
+  "name": "only-u-bundle",
+  "version": "0.1.0",
+  "description": "Only-U 维修命令插件：/diagnose /clean + 确认对话框 + 状态行 + /空间 全屏场景",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml"
+  ],
+  "engines": {
+    "node": "^22.19 || >=24"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
