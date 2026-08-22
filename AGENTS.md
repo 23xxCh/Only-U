@@ -2,16 +2,18 @@
 
 U盘运维 agent，基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）开发。
 
-Harness 源码在 `dsh/`，快照信息见 `dsh/UPSTREAM.md`。改 harness 或写 DSH 插件前先读 `dsh/AGENTS.md`。在 `dsh/` 里开发时用该目录下的 pnpm 工作区：
+领域用语在根目录 `CONTEXT.md`。Harness 源码在 `dsh/`，快照见 `dsh/UPSTREAM.md`。改 harness 或写 DSH 插件前先读 `dsh/AGENTS.md`。
+
+比赛交付是软件 **U盘包**（`portable/`）。无线网卡后续再做，不要在当前切片里加硬件。
 
 ```sh
 cd dsh
 pnpm install
 pnpm run build
-pnpm dsh web
+pnpm dsh --profile headless "这台电脑 C 盘满了，帮我看看"
 ```
 
-U盘相关能力做成 DSH 插件，不要直接改 harness 内核。
+无网或 DSH 未构建时，直接跑 `portable\diagnose.cmd`。U盘能力用 skill / 插件，不要改 harness 内核。
 
 ## Agent skills
 
