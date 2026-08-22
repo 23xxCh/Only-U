@@ -4,7 +4,9 @@
 
 赛事：赤兔 AI 黑客松，产品赛道「单人成军」，深圳湾万丽，**一天半开发 + 半天评奖**。仓库：https://github.com/23xxCh/Only-U
 
-**现在不要扩功能。** 先按本文对齐，再写代码。领域用词以根目录 `CONTEXT.md` 为准。架构决策见 `docs/adr/`。
+**本文是本场开发基线。** 后写入库的长 PRD（`docs/Only-U-项目需求文档.md`）与设计规格不是实现依据，冲突条款见 [ADR-0002](adr/0002-canonical-hackathon-scope.md)。已批准设计：[designs/only-u-hackathon.md](designs/only-u-hackathon.md)。
+
+**现在不要扩功能。** 先按本文对齐，再写代码。领域用词以根目录 `CONTEXT.md` 为准。架构决策见 `docs/adr/`。文档索引见 [README.md](README.md)。
 
 ---
 
@@ -31,9 +33,9 @@
 | **诊断** + 带 **误删防护** 的 **清理** | 杀毒全家桶、重装系统、修 BIOS/黑屏显示器 |
 | DSH **插件** / skill，不改 harness 内核 | Fork 改 `dsh/` 内核 |
 
-无网：走 **离线路径**，只跑本地 **诊断**。有网再让 Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。
+无网：走 **离线路径**，只跑本地 **诊断**。有网再让 Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。不要把「没网就不能诊断」当成产品承诺。
 
-详见 [ADR-0001](adr/0001-software-only-usb-pack.md)。
+详见 [ADR-0001](adr/0001-software-only-usb-pack.md)、[ADR-0002](adr/0002-canonical-hackathon-scope.md)。
 
 ---
 

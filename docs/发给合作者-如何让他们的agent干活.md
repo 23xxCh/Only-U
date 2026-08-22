@@ -37,6 +37,7 @@ git config --global user.email "你的邮箱"
 - Issue 在 GitHub：`23xxCh/Only-U`
 - 标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`
 - 领域文档：根目录 `CONTEXT.md` + `docs/adr/`（single-context）
+- 本场范围：`docs/plan.md` + `docs/designs/only-u-hackathon.md`。长 PRD 不是开发基线，见 ADR-0002
 
 agent 会读 `AGENTS.md` 和 `docs/agents/`。
 
@@ -100,11 +101,15 @@ Issue：https://github.com/23xxCh/Only-U/issues/12
 
 开工前必读：
 - AGENTS.md
+- docs/README.md（哪份文档是基线）
+- docs/plan.md
+- docs/designs/only-u-hackathon.md
 - docs/agents/issue-tracker.md
 - docs/agents/triage-labels.md
 - docs/agents/domain.md
-- CONTEXT.md（若存在）
-- docs/adr/ 里和本票相关的 ADR（若存在）
+- CONTEXT.md
+- docs/adr/ 里和本票相关的 ADR（必读 0001、0002）
+不要把 docs/Only-U-项目需求文档.md 当实现规格。
 
 然后：
 1. 用 gh 读取 Issue #N 的正文、评论、标签（gh issue view N --comments）

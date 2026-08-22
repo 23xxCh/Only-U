@@ -1,7 +1,10 @@
 # Only-U 产品与技术设计规格
 
-- 文档状态：已批准
-- 批准日期：2026-08-22
+> **非本场开发基线。** 黑客松以 [`docs/designs/only-u-hackathon.md`](../../designs/only-u-hackathon.md)（Approach B：脚本地板 + DSH 调同一脚本）为准。本文「在线-only、无网不诊断、本地 Web 主入口」已被 [ADR-0002](../../adr/0002-canonical-hackathon-scope.md) 否决。下文保留供对照，不要按本文开票。
+
+- 文档状态：参考归档（原「已批准」已降级）
+- 原批准日期：2026-08-22
+- 降级日期：2026-08-22
 - 项目：Only-U
 - 仓库：https://github.com/23xxCh/Only-U
 - 需求来源：`docs/requirements-source/突击深圳黑客松_聊天记录.md`、用户在需求澄清阶段作出的明确决定、DeepSeek Harness 当前仓库结构与能力说明

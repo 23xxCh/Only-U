@@ -7,7 +7,11 @@ This repo is **single-context**: one glossary and one ADR tree for the whole pro
 ## Before exploring, read these
 
 - **`CONTEXT.md`** at the repo root
+- **`docs/plan.md`** and **`docs/designs/only-u-hackathon.md`** — hackathon scope
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in
+- **`docs/README.md`** — which docs are canonical vs archival
+
+Do not treat `docs/Only-U-项目需求文档.md` as the implementation spec. ADR-0002 demotes it.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
 

@@ -1,5 +1,11 @@
 # Only-U 项目需求文档（PRD）
 
+> **非本场开发基线。** 2026-08-22 队长决定：黑客松实现与演示以 [`docs/plan.md`](plan.md)、[`docs/designs/only-u-hackathon.md`](designs/only-u-hackathon.md)、[ADR-0001](adr/0001-software-only-usb-pack.md)、[ADR-0002](adr/0002-canonical-hackathon-scope.md) 为准。
+>
+> 本文保留作痛点与需求蒸馏。下列条款**不进入本场交付**：V1 必须联网、无网禁止诊断、本地 Web 为唯一入口、41 条 FR 全量、完整性签名发布平台。
+>
+> 仍然有效：Windows 优先、软件 U 盘、不改 DSH 内核、不做后门/网卡本场、清理须确认、真实 Key 不进 Git。
+
 ## 文档控制
 
 | 项目 | 内容 |
@@ -9,7 +15,7 @@
 | 项目仓库 | https://github.com/23xxCh/Only-U |
 | 文档版本 | V1.0 |
 | 文档日期 | 2026-08-22 |
-| 文档状态 | 已批准设计后的开发基线 |
+| 文档状态 | 参考归档（已被 ADR-0002 降级，不再作为开发基线） |
 | 目标读者 | 产品、研发、测试、安全、运维、黑客松评审与项目协作者 |
 | 需求证据 | `docs/requirements-source/突击深圳黑客松_聊天记录.md`、需求澄清结论、当前 DeepSeek Harness 仓库能力 |
 
