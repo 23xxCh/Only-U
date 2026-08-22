@@ -16,5 +16,6 @@ build/
 .scratch/
 wxcontext/
 portable/.env
+grok-last-copy.txt
+last-copy.txt
 portable/runtime/
-portable/.dsh-home/
