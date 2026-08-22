@@ -15,5 +15,6 @@ build/
 *.log
 .scratch/
 wxcontext/
-portable/.dsh-home/
+portable/.env
 portable/runtime/
+portable/.dsh-home/
