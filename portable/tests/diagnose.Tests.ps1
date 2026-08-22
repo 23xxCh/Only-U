@@ -118,16 +118,17 @@ Describe 'Only-U offline diagnose' {
         $previousBudget = $diagnosisBudgetSeconds
         $previousStopwatch = $diagnosisStopwatch
         try {
-            $diagnosisBudgetSeconds = 1
+            $diagnosisBudgetSeconds = 3
             $diagnosisStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-            $first = Invoke-BoundedRead -TimeoutSeconds 5 -ScriptBlock { Start-Sleep -Seconds 4 }
+            $first = Invoke-BoundedRead -TimeoutSeconds 5 -ScriptBlock { Start-Sleep -Seconds 1 }
             $second = Invoke-BoundedRead -TimeoutSeconds 5 -ScriptBlock { Start-Sleep -Seconds 4 }
             $stopwatch.Stop()
 
-            $first.Status | Should Be 'TimedOut'
+            $first.Status | Should Be 'Complete'
             $second.Status | Should Be 'TimedOut'
-            $stopwatch.Elapsed.TotalSeconds | Should BeLessThan 2.5
+            $stopwatch.Elapsed.TotalSeconds | Should BeGreaterThan 0.7
+            $stopwatch.Elapsed.TotalSeconds | Should BeLessThan 4
         } finally {
             $diagnosisBudgetSeconds = $previousBudget
             $diagnosisStopwatch = $previousStopwatch
