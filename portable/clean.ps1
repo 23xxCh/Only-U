@@ -155,6 +155,15 @@ if ($Execute) {
 }
 Write-Output ''
 
+$spaceBefore = $null
+if ($Execute) {
+    try {
+        $spaceBefore = [long](Get-PSDrive -Name C -ErrorAction Stop).Free
+    } catch {
+        $spaceBefore = $null
+    }
+}
+
 $totalPreview = [long]0
 $totalPlanned = [long]0
 $totalActual = [long]0
@@ -348,6 +357,33 @@ if ($blocked.Count -gt 0) {
     Write-Output 'blocked by delete-protection:'
     $blocked | ForEach-Object { Write-Output ("  {0}" -f $_) }
     $blocked | ForEach-Object { Add-Log ('blocked by delete-protection: {0}' -f $_) }
+}
+
+if ($Execute -and $null -ne $spaceBefore) {
+    try {
+        $driveC = Get-PSDrive -Name C -ErrorAction Stop
+        $spaceAfter = [long]$driveC.Free
+    } catch {
+        $spaceAfter = $null
+    }
+    if ($null -ne $spaceAfter) {
+        $totalCapacity = [double]($driveC.Free + $driveC.Used)
+        $percentBefore = 0
+        if ($totalCapacity -gt 0) { $percentBefore = [int][Math]::Round(100.0 * $spaceBefore / $totalCapacity) }
+        $percentAfter = 0
+        if ($totalCapacity -gt 0) { $percentAfter = [int][Math]::Round(100.0 * $spaceAfter / $totalCapacity) }
+        $deltaBytes = $spaceAfter - $spaceBefore
+        $deltaSign = if ($deltaBytes -ge 0) { '+' } else { '-' }
+        Write-Output ''
+        Write-Output '== 空间回收 =='
+        Write-Output ('执行前：C: 剩余 {0} ({1}%)' -f (Format-Bytes $spaceBefore), $percentBefore)
+        Write-Output ('执行后：C: 剩余 {0} ({1}%)' -f (Format-Bytes $spaceAfter), $percentAfter)
+        Write-Output ('本次释放：约 {0}{1}' -f $deltaSign, (Format-Bytes ([Math]::Abs($deltaBytes))))
+        Add-Log '== 空间回收 =='
+        Add-Log ('执行前：C: 剩余 {0} ({1}%)' -f (Format-Bytes $spaceBefore), $percentBefore)
+        Add-Log ('执行后：C: 剩余 {0} ({1}%)' -f (Format-Bytes $spaceAfter), $percentAfter)
+        Add-Log ('本次释放：约 {0}{1}' -f $deltaSign, (Format-Bytes ([Math]::Abs($deltaBytes))))
+    }
 }
 
 if ($Execute) {
