@@ -44,6 +44,21 @@ Describe 'Only-U offline diagnose' {
         $output | Should BeLike '*PnP devices with driver issue*'
     }
 
+    It 'reports committed-memory, critical-event, and SMART sections on a normal machine' {
+        $output = & $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
+
+        $output | Should BeLike '*Committed Bytes In Use*'
+        $output | Should BeLike '*关键事件*'
+        $output | Should BeLike '*SMART*'
+    }
+
+    It 'does not report generic network or hypervisor events as storage faults' {
+        $output = & $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
+
+        $output | Should Not BeLike '*Miniport NIC*'
+        $output | Should Not BeLike '*Hypervisor initialized I/O remapping*'
+    }
+
     It 'uses cancellable scans, skips reparse points, and reports only real PnP error codes' {
         $source = Get-Content -Raw -LiteralPath $diagnoseScript
 
