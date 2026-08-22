@@ -13,14 +13,14 @@ set "DSH_HOME=%~dp0.dsh-home"
 if not exist "%DSH_HOME%" mkdir "%DSH_HOME%"
 if not exist "%DSH_HOME%\skills" mkdir "%DSH_HOME%\skills"
 
-echo Only-U Uç›˜åŒ…
-echo   ç¦»çº¿è¯Šæ–­: portable\diagnose.cmd
-echo   æ¸…ç†é¢„è§ˆ: portable\clean.cmd
-echo   æ— çº¿ç½‘å¡: æ¯”èµ›ä¸åš
+echo Only-U UÅÌ°ü
+echo   ÀëÏßÕï¶Ï: portable\diagnose.cmd
+echo   ÇåÀíÔ¤ÀÀ: portable\clean.cmd
+echo   ÎŞÏßÍø¿¨: ±ÈÈü²»×ö
 echo.
 
 if not exist "%ROOT%\dsh\package.json" (
-  echo æ‰¾ä¸åˆ° dsh\ ï¼Œæ— æ³•å¯åŠ¨ Agentã€‚å…ˆè·‘ diagnose.cmdã€‚
+  echo ÕÒ²»µ½ dsh\ £¬ÎŞ·¨Æô¶¯ Agent¡£ÏÈÅÜ diagnose.cmd¡£
   popd
   exit /b 1
 )
@@ -29,15 +29,15 @@ cd /d "%ROOT%\dsh"
 
 where pnpm >nul 2>&1
 if errorlevel 1 (
-  echo æœªæ‰¾åˆ° pnpmã€‚ç¦»çº¿è·¯å¾„è¯·ç”¨ portable\diagnose.cmd
+  echo Î´ÕÒµ½ pnpm¡£ÀëÏßÂ·¾¶ÇëÓÃ portable\diagnose.cmd
   popd
   exit /b 1
 )
 
 if "%~1"=="" (
-  echo å¯åŠ¨ headless è¿ç»´ä¼šè¯ã€‚æŠŠ C ç›˜è¯Šæ–­äº¤ç»™ Agentã€‚
-  echo æ— ç½‘è¯·æ”¹è·‘ portable\diagnose.cmd
-  call pnpm dsh --profile headless "è¿™æ˜¯ä¸€æ¬¡ Only-U è¿ç»´ä¼šè¯ã€‚å…ˆè¯»ä»“åº“ CONTEXT.md å’Œ skill only-u-opsã€‚å¯¹å½“å‰ Windows æœºå™¨åšè¯Šæ–­ï¼šC ç›˜ç©ºé—´ã€ä¸´æ—¶ç›®å½•ã€è¿‘æœŸç³»ç»Ÿé”™è¯¯ã€æ‰“å°æœºã€‚ä¸è¦åˆ é™¤æ–‡ä»¶ã€‚ç»™å‡ºå¯å›æ”¶é¡¹é¢„è§ˆã€‚æ— çº¿ç½‘å¡è·¯å¾„æœ¬æ¬¡ä¸åšã€‚"
+  echo Æô¶¯ headless ÔËÎ¬»á»°¡£°Ñ C ÅÌÕï¶Ï½»¸ø Agent¡£
+  echo ÎŞÍøÇë¸ÄÅÜ portable\diagnose.cmd
+  call pnpm dsh --profile headless "ÕâÊÇÒ»´Î Only-U ÔËÎ¬»á»°¡£ÏÈ¶Á²Ö¿â CONTEXT.md ºÍ skill only-u-ops¡£¶Ôµ±Ç° Windows »úÆ÷×öÕï¶Ï£ºC ÅÌ¿Õ¼ä¡¢ÁÙÊ±Ä¿Â¼¡¢½üÆÚÏµÍ³´íÎó¡¢´òÓ¡»ú¡£²»ÒªÉ¾³ıÎÄ¼ş¡£¸ø³ö¿É»ØÊÕÏîÔ¤ÀÀ¡£ÎŞÏßÍø¿¨Â·¾¶±¾´Î²»×ö¡£"
 ) else (
   call pnpm dsh --profile headless %*
 )
