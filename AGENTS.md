@@ -1,3 +1,18 @@
+# Only-U
+
+U盘运维 agent，基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）开发。
+
+Harness 源码在 `dsh/`，快照信息见 `dsh/UPSTREAM.md`。改 harness 或写 DSH 插件前先读 `dsh/AGENTS.md`。在 `dsh/` 里开发时用该目录下的 pnpm 工作区：
+
+```sh
+cd dsh
+pnpm install
+pnpm run build
+pnpm dsh web
+```
+
+U盘相关能力做成 DSH 插件，不要直接改 harness 内核。
+
 ## Agent skills
 
 ### Issue tracker
