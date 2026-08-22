@@ -1,0 +1,24 @@
+﻿Only-U U盘包
+
+插上盘后双击：
+
+  诊断.cmd        没网也能用。看 C 盘、临时目录、近期错误、打印机。
+  清理预览.cmd    只预览可回收量，不删除。确认后再运行 portable\clean.cmd -Execute。
+  启动Agent.cmd   有网才用。打开 TUI，对它说「C 盘满了，帮我看看」。
+
+TUI 里的常用入口
+
+  直接说话        agent 会自己动手跑命令（PowerShell 工具已挂载）。
+  !命令           !ipconfig —— 本地跑命令，结果只给你看，不给 agent。
+  !!命令          !!ipconfig —— 同上，结果还会发给 agent 接着分析。
+  /diagnose       跑完整诊断，报告存 portable\logs\diagnose-*.txt。
+  /clean          清理预览（只算可回收空间，不删除），确认后运行。
+  /space /空间    全屏看 CPU/内存/磁盘/GPU 色块面板（r 刷新，Esc 退出）。
+  /preset only-u-repair   切维修模式（只挂 PowerShell 与 Only-U 工具）。
+  /preset standard        切回标准模式（默认）。
+
+注意
+
+  不要输入 /update。
+  不要把 portable\.env 发到 GitHub 或聊天里。
+  重复双击只会开一个窗口。
