@@ -6,9 +6,21 @@
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { Service } from '@deepseek-ai/cordis'
 import { registerSpaceScene } from './space.js'
 
 export const name = 'only-u-bundle'
+
+// dsh-tui 入口行的 inject 链期待名为 only-u-bundle 的「服务」——
+// 默认导出 Service 子类、super(ctx, 'only-u-bundle') 即提供服务
+// （范本：dsh-tui 的 TuiSceneRuntime，scenes.js）。
+class OnlyUOps extends Service {
+  constructor(ctx) {
+    super(ctx, 'only-u-bundle')
+  }
+}
+
+export default OnlyUOps
 
 const PS = 'powershell.exe'
 const RUN_TIMEOUT_MS = 150000
