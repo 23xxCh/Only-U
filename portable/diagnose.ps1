@@ -9,15 +9,41 @@ function Format-Bytes([long]$n) {
     return ('{0:N0} B' -f $n)
 }
 
+$maxScanFiles = 20000
+$scanTimeoutSeconds = 8
+
 function Get-DirSize([string]$path) {
-    if (-not (Test-Path -LiteralPath $path)) { return $null }
+    if ($path -match '^[\\]{2}') {
+        return [pscustomobject]@{ Status = 'Unc'; Bytes = 0; Files = 0 }
+    }
+    if (-not (Test-Path -LiteralPath $path)) {
+        return [pscustomobject]@{ Status = 'Missing'; Bytes = 0; Files = 0 }
+    }
+
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    [long]$bytes = 0
+    [int]$files = 0
+    $enumerator = $null
     try {
-        $sum = (Get-ChildItem -LiteralPath $path -Recurse -Force -File -ErrorAction SilentlyContinue |
-            Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-        if ($null -eq $sum) { $sum = 0 }
-        return [long]$sum
+        $enumerator = [System.IO.Directory]::EnumerateFiles(
+            $path,
+            '*',
+            [System.IO.SearchOption]::AllDirectories
+        ).GetEnumerator()
+        while ($enumerator.MoveNext()) {
+            if ($stopwatch.Elapsed.TotalSeconds -ge $scanTimeoutSeconds -or $files -ge $maxScanFiles) {
+                return [pscustomobject]@{ Status = 'Skipped'; Bytes = $bytes; Files = $files }
+            }
+            $file = [System.IO.FileInfo]$enumerator.Current
+            $bytes += $file.Length
+            $files++
+        }
+        return [pscustomobject]@{ Status = 'Complete'; Bytes = $bytes; Files = $files }
     } catch {
-        return $null
+        return [pscustomobject]@{ Status = 'Unreadable'; Bytes = 0; Files = 0 }
+    } finally {
+        if ($enumerator) { $enumerator.Dispose() }
+        $stopwatch.Stop()
     }
 }
 
@@ -44,6 +70,27 @@ if ($os) {
     $used = ($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) * 1KB
     $total = $os.TotalVisibleMemorySize * 1KB
     Write-Output ("RAM used {0} / {1}" -f (Format-Bytes $used), (Format-Bytes $total))
+} else {
+    Write-Output '无法读取内存信息'
+}
+
+try {
+    Write-Output 'top memory processes (read-only):'
+    Get-Process -ErrorAction Stop |
+        Sort-Object -Property WorkingSet64 -Descending |
+        Select-Object -First 5 |
+        ForEach-Object {
+            Write-Output ("  {0}  {1}" -f $_.ProcessName, (Format-Bytes $_.WorkingSet64))
+        }
+} catch {
+    Write-Output '无法读取占内存进程'
+}
+
+try {
+    $startupCount = @(Get-CimInstance Win32_StartupCommand -ErrorAction Stop).Count
+    Write-Output ("startup entries: {0} (read-only clue)" -f $startupCount)
+} catch {
+    Write-Output '无法读取启动项数量'
 }
 
 Write-Output ''
@@ -57,11 +104,15 @@ $candidates = @(
 ) | Where-Object { $_ } | Select-Object -Unique
 
 foreach ($dir in $candidates) {
-    $size = Get-DirSize $dir
-    $label = if ($null -eq $size) { 'unreadable' } else { Format-Bytes $size }
-    $exists = Test-Path -LiteralPath $dir
-    Write-Output ("{0}" -f $dir)
-    Write-Output ("  {0}  exists={1}" -f $label, $exists)
+    Write-Output ("正在扫描 {0}" -f $dir)
+    $scan = Get-DirSize $dir
+    switch ($scan.Status) {
+        'Complete' { Write-Output ("  {0}  files={1}" -f (Format-Bytes $scan.Bytes), $scan.Files) }
+        'Skipped' { Write-Output ("  跳过：太大或超时（已统计 {0} 个文件，约 {1}）" -f $scan.Files, (Format-Bytes $scan.Bytes)) }
+        'Missing' { Write-Output '  无法读取（路径不存在）' }
+        'Unc' { Write-Output '  跳过：UNC 路径' }
+        default { Write-Output '  无法读取' }
+    }
 }
 
 Write-Output ''
@@ -74,17 +125,33 @@ try {
             Write-Output ("[{0}] {1}  {2}" -f $_.TimeCreated.ToString('MM-dd HH:mm'), $_.ProviderName, $msg)
         }
 } catch {
-    Write-Output '(cannot read System log; may need elevation)'
+    Write-Output '无法读取 System 事件日志（可能需要管理员权限）'
 }
 
 Write-Output ''
 Write-Output '--- printers ---'
 try {
-    Get-Printer -ErrorAction Stop | ForEach-Object {
+    $printers = @(Get-Printer -ErrorAction Stop)
+    if ($printers.Count -eq 0) { Write-Output '未发现打印机' }
+    $printers | ForEach-Object {
         Write-Output ("{0}  status={1}  driver={2}" -f $_.Name, $_.PrinterStatus, $_.DriverName)
     }
 } catch {
-    Write-Output '(Get-Printer unavailable)'
+    Write-Output '无法读取打印机'
+}
+
+Write-Output ''
+Write-Output '--- PnP devices with driver issue (max 8) ---'
+try {
+    $devices = @(Get-PnpDevice -ErrorAction Stop |
+        Where-Object { $_.Status -and $_.Status -ne 'OK' } |
+        Select-Object -First 8)
+    if ($devices.Count -eq 0) { Write-Output '未发现驱动状态异常的即插即用设备' }
+    $devices | ForEach-Object {
+        Write-Output ("{0}  class={1}  status={2}" -f $_.FriendlyName, $_.Class, $_.Status)
+    }
+} catch {
+    Write-Output '无法读取即插即用设备状态'
 }
 
 Write-Output ''
