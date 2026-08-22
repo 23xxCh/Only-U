@@ -59,6 +59,15 @@ Describe 'Only-U offline diagnose' {
         $output | Should Not BeLike '*Hypervisor initialized I/O remapping*'
     }
 
+    It 'keeps raw threshold values, ranks processes by commit, and bounds event details' {
+        $source = Get-Content -Raw -LiteralPath $diagnoseScript
+
+        $source | Should BeLike '*FreePctRaw*'
+        $source | Should BeLike '*CommittedPercentRaw*'
+        $source | Should BeLike '*Sort-Object -Property PagedMemorySize64*'
+        $source | Should BeLike '*Select-Object -First 20*'
+    }
+
     It 'uses cancellable scans, skips reparse points, and reports only real PnP error codes' {
         $source = Get-Content -Raw -LiteralPath $diagnoseScript
 

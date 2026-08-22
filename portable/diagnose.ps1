@@ -70,8 +70,8 @@ $diskFacts = @()
 try {
     $disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop)
     $disks | ForEach-Object {
-        $freePct = if ($_.Size -gt 0) { [math]::Round(100 * $_.FreeSpace / $_.Size, 1) } else { 0 }
-        $diskFacts += [pscustomobject]@{ DeviceId = $_.DeviceID; Size = [long]$_.Size; FreeSpace = [long]$_.FreeSpace; FreePct = $freePct }
+        $freePctRaw = if ($_.Size -gt 0) { 100 * $_.FreeSpace / $_.Size } else { 0 }
+        $diskFacts += [pscustomobject]@{ DeviceId = $_.DeviceID; Size = [long]$_.Size; FreeSpace = [long]$_.FreeSpace; FreePctRaw = $freePctRaw; FreePct = [math]::Round($freePctRaw, 1) }
     }
 } catch {
     $diskFacts = @()
@@ -90,11 +90,14 @@ try {
     $memoryFacts = $null
 }
 
+$committedPercentRaw = $null
 $committedPercent = $null
 try {
     $sample = Get-Counter '\Memory\% Committed Bytes In Use' -ErrorAction Stop
-    $committedPercent = [math]::Round($sample.CounterSamples[0].CookedValue, 1)
+    $committedPercentRaw = $sample.CounterSamples[0].CookedValue
+    $committedPercent = [math]::Round($committedPercentRaw, 1)
 } catch {
+    $committedPercentRaw = $null
     $committedPercent = $null
 }
 
@@ -138,10 +141,10 @@ try {
 
 $redFlags = @()
 $systemDisk = @($diskFacts | Where-Object { $_.DeviceId -eq 'C:' } | Select-Object -First 1)[0]
-if ($systemDisk -and ($systemDisk.FreePct -lt 5 -or $systemDisk.FreeSpace -lt 1GB)) {
+if ($systemDisk -and ($systemDisk.FreePctRaw -lt 5 -or $systemDisk.FreeSpace -lt 1GB)) {
     $redFlags += 'C 盘空间严重不足（剩余低于 5% 或 1 GB）'
 }
-if ($null -ne $committedPercent -and $committedPercent -gt 90) {
+if ($null -ne $committedPercentRaw -and $committedPercentRaw -gt 90) {
     $redFlags += ('提交内存高压（{0}%）' -f $committedPercent)
 }
 if (@($criticalEvents | Where-Object { $_.Id -eq 2004 }).Count -gt 0) {
@@ -170,7 +173,7 @@ Write-Output '--- disk ---'
 if ($diskFacts.Count -eq 0) { Write-Output '无法读取磁盘信息' }
 $diskFacts | ForEach-Object {
     Write-Output ("{0}  total {1}  free {2} ({3}%)" -f $_.DeviceId, (Format-Bytes $_.Size), (Format-Bytes $_.FreeSpace), $_.FreePct)
-    if ($_.DeviceId -eq 'C:' -and $_.FreePct -lt 15) {
+    if ($_.DeviceId -eq 'C:' -and $_.FreePctRaw -lt 15) {
         Write-Output '  ! C: free < 15%. Preview clean with portable\clean.cmd'
     }
 }
@@ -184,7 +187,7 @@ if ($memoryFacts) {
     Write-Output '无法读取内存信息'
 }
 if ($null -ne $committedPercent) {
-    $commitLabel = if ($committedPercent -gt 85) { '高压' } elseif ($committedPercent -gt 75) { '预警' } else { '正常' }
+    $commitLabel = if ($committedPercentRaw -gt 85) { '高压' } elseif ($committedPercentRaw -gt 75) { '预警' } else { '正常' }
     Write-Output ("% Committed Bytes In Use: {0}%（{1}）" -f $committedPercent, $commitLabel)
 } else {
     Write-Output '无法读取 % Committed Bytes In Use'
@@ -200,7 +203,7 @@ if ($pageFiles.Count -eq 0) {
 try {
     Write-Output 'top memory processes (read-only):'
     Get-Process -ErrorAction Stop |
-        Sort-Object -Property WorkingSet64 -Descending |
+        Sort-Object -Property PagedMemorySize64 -Descending |
         Select-Object -First 5 |
         ForEach-Object {
             Write-Output ("  {0}  working set {1}  commit {2}" -f $_.ProcessName, (Format-Bytes $_.WorkingSet64), (Format-Bytes $_.PagedMemorySize64))
@@ -245,10 +248,14 @@ if (-not $criticalEventsReadable) {
 } elseif ($criticalEvents.Count -eq 0) {
     Write-Output '未发现低虚拟内存或存储异常关键事件'
 } else {
-    $criticalEvents | Sort-Object -Property TimeCreated -Descending | ForEach-Object {
+    $eventsToDisplay = @($criticalEvents | Sort-Object -Property TimeCreated -Descending | Select-Object -First 20)
+    $eventsToDisplay | ForEach-Object {
         $msg = if ($_.Message) { ($_.Message -replace '\s+', ' ') } else { '' }
         if ($msg.Length -gt 280) { $msg = $msg.Substring(0, 280) }
         Write-Output ("[{0}] Event {1}  {2}" -f $_.TimeCreated.ToString('MM-dd HH:mm'), $_.Id, $msg)
+    }
+    if ($criticalEvents.Count -gt $eventsToDisplay.Count) {
+        Write-Output ("仅显示最新 {0} 条；共命中 {1} 条关键事件。" -f $eventsToDisplay.Count, $criticalEvents.Count)
     }
 }
 
