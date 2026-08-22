@@ -78,6 +78,15 @@ if errorlevel 1 (
 )
 
 :start
+set "ONLY_U_DSH_BIN=%DSH_BIN%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$target = $env:ONLY_U_DSH_BIN; try { $existing = Get-CimInstance -ClassName Win32_Process -Filter 'Name = ''node.exe''' -ErrorAction Stop | Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($target, [StringComparison]::OrdinalIgnoreCase) -ge 0 } | Select-Object -First 1; if ($null -ne $existing) { exit 42 } } catch { exit 0 }"
+set "DSH_GUARD_EXIT=%ERRORLEVEL%"
+if "%DSH_GUARD_EXIT%"=="42" (
+  echo DSH TUI 已在运行。请关闭现有窗口，或在任务管理器中结束残留的 node.exe 后重试。
+  echo.
+  pause
+  exit /b 1
+)
 echo 正在启动 Only-U 运维会话...
 "%NODE_EXE%" "%DSH_BIN%" --profile dsh-tui
 set "START_EXIT=%ERRORLEVEL%"
