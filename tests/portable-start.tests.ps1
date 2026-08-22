@@ -54,20 +54,29 @@ function New-StubNode {
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 public static class StubNode
 {
     public static int Main(string[] args)
     {
         string output = Environment.GetEnvironmentVariable("ONLY_U_TEST_STUB_OUTPUT");
-        if (string.IsNullOrEmpty(output)) { return 0; }
+        if (!string.IsNullOrEmpty(output))
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("ARGS=" + string.Join("|", args));
+            sb.AppendLine("DSH_HOME=" + Environment.GetEnvironmentVariable("DSH_HOME"));
+            sb.AppendLine("DEEPSEEK_API_KEY=" + Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY"));
+            sb.AppendLine("PATH=" + Environment.GetEnvironmentVariable("PATH"));
+            File.WriteAllText(output, sb.ToString(), new UTF8Encoding(false));
+        }
 
-        var sb = new StringBuilder();
-        sb.AppendLine("ARGS=" + string.Join("|", args));
-        sb.AppendLine("DSH_HOME=" + Environment.GetEnvironmentVariable("DSH_HOME"));
-        sb.AppendLine("DEEPSEEK_API_KEY=" + Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY"));
-        sb.AppendLine("PATH=" + Environment.GetEnvironmentVariable("PATH"));
-        File.WriteAllText(output, sb.ToString(), new UTF8Encoding(false));
+        foreach (string arg in args)
+        {
+            const string readyPrefix = "--only-u-test-ready=";
+            if (arg.StartsWith(readyPrefix)) { File.WriteAllText(arg.Substring(readyPrefix.Length), string.Empty); }
+        }
+        while (Array.IndexOf(args, "--only-u-test-wait") >= 0) { Thread.Sleep(25); }
         return 0;
     }
 }
@@ -154,6 +163,22 @@ It 'portable start command launches dsh-tui without pnpm or headless' {
     Assert-True ($text.Contains('--profile dsh-tui')) 'portable\start.cmd does not launch the dsh-tui profile.'
     Assert-True ($text -notmatch '(?i)pnpm') 'portable\start.cmd still references pnpm.'
     Assert-True ($text -notmatch '(?i)headless') 'portable\start.cmd still references the headless profile.'
+}
+
+It 'portable start command inspects node command lines for an exact DSH launcher match' {
+    $text = Read-Text $StartCmd $Gbk
+    Assert-True ($text.Contains('Get-CimInstance -ClassName Win32_Process')) 'portable\start.cmd does not query Windows process command lines through CIM.'
+    Assert-True ($text.Contains('CommandLine')) 'portable\start.cmd does not inspect process command lines.'
+    Assert-True ($text.Contains('set "ONLY_U_DSH_BIN=%DSH_BIN%"')) 'portable\start.cmd does not compare process command lines with the launcher exact DSH path.'
+    Assert-True ($text.Contains("-Filter 'Name = ''node.exe'''")) 'portable\start.cmd does not limit duplicate inspection to node.exe processes.'
+    Assert-True ($text -notmatch '(?i)tasklist') 'portable\start.cmd must not use tasklist for command-line duplicate detection.'
+    $closeExistingWindow = -join [char[]]@(0x8BF7, 0x5173, 0x95ED, 0x73B0, 0x6709, 0x7A97, 0x53E3)
+    Assert-True ($text.Contains($closeExistingWindow)) 'portable\start.cmd does not tell the user how to close the existing TUI.'
+}
+
+It 'portable start command does not use PID-file duplicate tracking' {
+    $text = Read-Text $StartCmd $Gbk
+    Assert-True ($text -notmatch '(?i)(pidfile|\.pid|ONLY_U_[A-Z_]*PID)') 'portable\start.cmd must not use PID-file duplicate tracking.'
 }
 
 It 'portable start command handles DeepSeek Key safely' {
@@ -279,6 +304,35 @@ try {
 
         Assert-Equal 0 $exitCode 'Start-Agent.cmd should forward success from portable\start.cmd.'
         Assert-True (Test-Path -LiteralPath $stubOutput -PathType Leaf) 'Start-Agent.cmd did not invoke portable\start.cmd.'
+    }
+
+    It 'blocks a second launcher when its DSH TUI command line is already running' {
+        $fakeReadyFile = Join-Path $tempRoot 'duplicate-node-ready.txt'
+        $fakeNode = $null
+
+        try {
+            $fakeNode = Start-Process -FilePath $nodeExe -ArgumentList @($binJs, '--profile', 'dsh-tui', "--only-u-test-ready=$fakeReadyFile", '--only-u-test-wait') -PassThru
+            $deadline = [DateTime]::UtcNow.AddSeconds(5)
+            while (-not (Test-Path -LiteralPath $fakeReadyFile) -and [DateTime]::UtcNow -lt $deadline) {
+                Start-Sleep -Milliseconds 25
+            }
+            Assert-True (Test-Path -LiteralPath $fakeReadyFile -PathType Leaf) 'The duplicate-test fake node.exe did not start.'
+
+            $outputFile = Join-Path $tempRoot 'duplicate-tui-output.txt'
+            $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile -SendNewline
+            $output = [System.IO.File]::ReadAllText($outputFile, $Gbk)
+            Assert-True ($exitCode -ne 0) 'A duplicate DSH TUI launcher should exit with a nonzero code.'
+            Assert-True ($output.Contains('DSH TUI')) 'Duplicate DSH TUI launcher should explain that DSH TUI is already running.'
+        }
+        finally {
+            if ($null -ne $fakeNode) {
+                $fakeNode.Refresh()
+                if (-not $fakeNode.HasExited) {
+                    Stop-Process -Id $fakeNode.Id -Force
+                    $fakeNode.WaitForExit()
+                }
+            }
+        }
     }
 }
 finally {
