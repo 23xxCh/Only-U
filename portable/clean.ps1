@@ -1,6 +1,7 @@
 ﻿# Only-U clean with delete-protection. Default is preview-only.
 param(
-    [switch]$Execute
+    [switch]$Execute,
+    [switch]$Interactive
 )
 
 $ErrorActionPreference = 'Continue'
@@ -356,8 +357,34 @@ if ($Execute) {
     [System.IO.File]::WriteAllLines($logPath, $logLines, $utf8NoBom)
 }
 
-if (-not $Execute) {
+if (-not $Execute -and -not $Interactive) {
     Write-Output ''
     Write-Output 'To delete: portable\clean.cmd -Execute'
     Write-Output 'Never cleans Desktop / Documents / Downloads / Pictures.'
+}
+
+if ($Interactive -and -not $Execute) {
+    Write-Output ''
+    Write-Output ("将清理约 {0}（白名单类别；用户文档已跳过）" -f (Format-Bytes $totalPreview))
+    while ($true) {
+        Write-Output '按 Y 立即执行 / N 取消 / R 重看清单'
+        $answer = Read-Host '> '
+        if ($null -eq $answer) {
+            Write-Output '输入已结束，按取消处理。'
+            break
+        }
+        if ($answer -match '^[Yy]$') {
+            & $PSCommandPath -Execute
+            break
+        }
+        if ($answer -match '^[Nn]$') {
+            Write-Output '已取消，未删除任何文件。'
+            break
+        }
+        if ($answer -match '^[Rr]$') {
+            & $PSCommandPath -Interactive
+            break
+        }
+        Write-Output '无效输入，请输入 Y / N / R。'
+    }
 }
