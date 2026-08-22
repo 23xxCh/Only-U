@@ -1,6 +1,7 @@
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $diagnoseScript = Join-Path $repoRoot 'portable\diagnose.ps1'
 $skillFile = Join-Path $repoRoot '.dsh\skills\only-u-ops\SKILL.md'
+$windowsPowerShell = (Get-Command powershell -ErrorAction Stop).Source
 
 Describe 'Only-U offline diagnose' {
     It 'caps a large TEMP scan and explains that it was skipped' {
@@ -21,7 +22,7 @@ Describe 'Only-U offline diagnose' {
             $env:WINDIR = $TestDrive
 
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-            $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
+            $output = & $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
             $stopwatch.Stop()
 
             $output | Should BeLike '*正在扫描*'
@@ -36,11 +37,19 @@ Describe 'Only-U offline diagnose' {
     }
 
     It 'reports memory process, startup, and PnP driver clues without changing the machine' {
-        $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
+        $output = & $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
 
         $output | Should BeLike '*top memory processes*'
         $output | Should BeLike '*startup entries*'
         $output | Should BeLike '*PnP devices with driver issue*'
+    }
+
+    It 'uses cancellable scans, skips reparse points, and reports only real PnP error codes' {
+        $source = Get-Content -Raw -LiteralPath $diagnoseScript
+
+        $source | Should BeLike '*Start-Job*'
+        $source | Should BeLike '*ReparsePoint*'
+        $source | Should BeLike '*ConfigManagerErrorCode*'
     }
 
     It 'instructs a TUI 运维会话 to show diagnosis and clean preview before confirmation' {

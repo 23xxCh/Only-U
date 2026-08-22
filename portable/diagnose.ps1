@@ -20,30 +20,49 @@ function Get-DirSize([string]$path) {
         return [pscustomobject]@{ Status = 'Missing'; Bytes = 0; Files = 0 }
     }
 
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    [long]$bytes = 0
-    [int]$files = 0
-    $enumerator = $null
-    try {
-        $enumerator = [System.IO.Directory]::EnumerateFiles(
-            $path,
-            '*',
-            [System.IO.SearchOption]::AllDirectories
-        ).GetEnumerator()
-        while ($enumerator.MoveNext()) {
-            if ($stopwatch.Elapsed.TotalSeconds -ge $scanTimeoutSeconds -or $files -ge $maxScanFiles) {
-                return [pscustomobject]@{ Status = 'Skipped'; Bytes = $bytes; Files = $files }
+    $job = Start-Job -ArgumentList $path, $maxScanFiles -ScriptBlock {
+        param([string]$rootPath, [int]$fileLimit)
+        [long]$bytes = 0
+        [int]$files = 0
+        $directories = New-Object 'System.Collections.Stack'
+        $directories.Push([System.IO.DirectoryInfo]$rootPath)
+
+        while ($directories.Count -gt 0) {
+            $directory = [System.IO.DirectoryInfo]$directories.Pop()
+            if (($directory.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
+            try {
+                foreach ($file in $directory.GetFiles()) {
+                    if ($files -ge $fileLimit) {
+                        return [pscustomobject]@{ Status = 'Skipped'; Bytes = $bytes; Files = $files }
+                    }
+                    $bytes += $file.Length
+                    $files++
+                }
+                foreach ($child in $directory.GetDirectories()) {
+                    if (($child.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0) {
+                        $directories.Push($child)
+                    }
+                }
+            } catch [System.UnauthorizedAccessException] {
+                continue
+            } catch [System.IO.IOException] {
+                continue
             }
-            $file = [System.IO.FileInfo]$enumerator.Current
-            $bytes += $file.Length
-            $files++
         }
         return [pscustomobject]@{ Status = 'Complete'; Bytes = $bytes; Files = $files }
+    }
+    try {
+        if ($null -eq (Wait-Job -Job $job -Timeout $scanTimeoutSeconds)) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            return [pscustomobject]@{ Status = 'Skipped'; Bytes = 0; Files = 0 }
+        }
+        $result = @(Receive-Job -Job $job -ErrorAction Stop | Select-Object -First 1)[0]
+        if ($null -eq $result) { return [pscustomobject]@{ Status = 'Unreadable'; Bytes = 0; Files = 0 } }
+        return $result
     } catch {
         return [pscustomobject]@{ Status = 'Unreadable'; Bytes = 0; Files = 0 }
     } finally {
-        if ($enumerator) { $enumerator.Dispose() }
-        $stopwatch.Stop()
+        Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -54,14 +73,19 @@ Write-Output ("user: {0}" -f $env:USERNAME)
 Write-Output ''
 
 Write-Output '--- disk ---'
-Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue |
-    ForEach-Object {
+try {
+    $disks = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop)
+    if ($disks.Count -eq 0) { Write-Output '无法读取磁盘信息' }
+    $disks | ForEach-Object {
         $freePct = if ($_.Size -gt 0) { [math]::Round(100 * $_.FreeSpace / $_.Size, 1) } else { 0 }
         Write-Output ("{0}  total {1}  free {2} ({3}%)" -f $_.DeviceID, (Format-Bytes $_.Size), (Format-Bytes $_.FreeSpace), $freePct)
         if ($_.DeviceID -eq 'C:' -and $freePct -lt 15) {
             Write-Output '  ! C: free < 15%. Preview clean with portable\clean.cmd'
         }
     }
+} catch {
+    Write-Output '无法读取磁盘信息'
+}
 
 Write-Output ''
 Write-Output '--- memory ---'
@@ -143,12 +167,12 @@ try {
 Write-Output ''
 Write-Output '--- PnP devices with driver issue (max 8) ---'
 try {
-    $devices = @(Get-PnpDevice -ErrorAction Stop |
-        Where-Object { $_.Status -and $_.Status -ne 'OK' } |
+    $devices = @(Get-CimInstance Win32_PnPEntity -ErrorAction Stop |
+        Where-Object { $_.ConfigManagerErrorCode -ne 0 } |
         Select-Object -First 8)
     if ($devices.Count -eq 0) { Write-Output '未发现驱动状态异常的即插即用设备' }
     $devices | ForEach-Object {
-        Write-Output ("{0}  class={1}  status={2}" -f $_.FriendlyName, $_.Class, $_.Status)
+        Write-Output ("{0}  class={1}  error-code={2}" -f $_.Name, $_.PNPClass, $_.ConfigManagerErrorCode)
     }
 } catch {
     Write-Output '无法读取即插即用设备状态'
