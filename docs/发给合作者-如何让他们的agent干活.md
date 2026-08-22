@@ -4,7 +4,9 @@
 
 三人共用**一个 GitHub 仓库 + 一套 GitHub Issues**。技能装在每人自己的电脑上；真正用来交接的不是聊天记录，而是 Issue。
 
-一句话：**你把票写清楚并标成 `ready-for-agent`，对方新开一个 agent 会话，把下面的「开工提示词」贴进去。**
+分工：**队长做需求调研和架构（plan / ADR / Issue 正文）。两个合作者只写代码、开 PR。** 不要直推 `main`，不要删 `dsh/`。
+
+一句话：**你把票写清楚并标成 `ready-for-agent`，对方新开一个 agent 会话，把「开工提示词」贴进去。**
 
 ---
 
@@ -37,7 +39,7 @@ git config --global user.email "你的邮箱"
 - Issue 在 GitHub：`23xxCh/Only-U`
 - 标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`
 - 领域文档：根目录 `CONTEXT.md` + `docs/adr/`（single-context）
-- 本场范围：`docs/plan.md` + `docs/prd.md` + `docs/designs/only-u-hackathon.md`。长 PRD 不是开发基线，见 ADR-0002。有网 Agent 壳是 dsh-TUI，开发基座见 ADR-0003、ADR-0004。
+- 本场范围：`docs/plan.md` + ADR-0002 + [ADR-0005](adr/0005-usb-baked-dsh-runtime.md)。`docs/prd.md` 和长 PRD 不是实现依据。有网壳是 dsh-TUI 插件；烤盘用 `dsh/` + `scripts/bake-usb.ps1`。
 
 agent 会读 `AGENTS.md` 和 `docs/agents/`。
 
