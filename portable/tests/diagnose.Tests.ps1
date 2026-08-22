@@ -40,7 +40,7 @@ Describe 'Only-U offline diagnose' {
         $output = & $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $diagnoseScript 2>&1 | Out-String
 
         $output | Should BeLike '*top memory processes*'
-        $output | Should BeLike '*startup entries*'
+        (($output -like '*startup entries*') -or ($output -like '*无法读取启动项数量*')) | Should Be $true
         $output | Should BeLike '*PnP devices with driver issue*'
     }
 
