@@ -1,0 +1,14 @@
+# Only-U 维修命令插件 —— dsh-tui profile 的第三个 bundle 层，挂在根组合上。
+#
+# 两个要点（都来自 dsh-app-boot 的 patch 语义实测）：
+# 1. 新增条目必须走 insert（裸 id 是改写语义，查无此 id 会静默跳过）；
+# 2. loader 按 inject 依赖图懒应用，孤儿条目永远不会 apply——
+#    必须把本插件挂进 dsh-tui 应用行的 inject 链。
+- insert:
+    - id: only-u-bundle
+      name: 'only-u-bundle'
+
+# dsh-tui 行的 inject 整体替换（patch 语义 = 替换整个键，不是追加）。
+# 上游（dsh-tui 0.8.8）若改此列表需同步；版本已随烤盘固定。
+- id: dsh-tui
+  inject: [workspaceRegistry, agents, tuiWorkspaces, tuiScenes, tuiDialogs, tuiStatus, tuiShortcuts, tuiRenderers, only-u-bundle]
