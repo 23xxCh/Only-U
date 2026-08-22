@@ -37,6 +37,15 @@
 | 离线驱动安装 | 驱动总裁离线包 | 核实重分发授权；装前备份+装后回滚；ADR-0006 红级逐项确认 |
 | GPU 压力测试 | FurMark CLI | 授权核实；仅报告结果不自动跑长时烤机 |
 | 底层内存检测 | MemTest86 | 需重启引导，产品形态待定 |
+| 蓝屏 dump 分析 | BlueScreenView（NirSoft） | PowerShell 只能读事件日志，dump 符号化真做不到；NirSoft 商业再分发条款需逐项核实留档 |
+
+## 2026-08-22 增补：图吧开源重写版（tubatools）调研结论
+
+对 `luolangaga/tubatools`（图吧工具箱 WinUI3 重构版，GPL-3.0，2026 年起）与 `luolangaga/tubatoolsPlugin`（社区插件库，**无许可证**）的取证结论：
+
+1. **整体仍不引入，四重否决坐实**：GUI 壳无 headless 单工具接口（AGENTS.md 仅有内部 headless 参数）；Tools.zip 收录 AIDA64/UltraISO（付费）、CPU-Z/GPU-Z（禁止打包再分发）等，商业重分发违规；内置 WinRing0 内核驱动 + KMS 激活，杀软误报加码；联网更新/插件下载与离线定位冲突。tubatoolsPlugin 无任何许可证且直接托管第三方二进制，不能随 U 盘分发。
+2. **意外收获：42KB《CLI使用文档.md》当调研底稿**。官方逐参数收录 20+ 工具的命令行用法（FurMark 烤机参数、NirSoft 系 CSV 导出、WizTree /export 等）。此后逐工具核实参数不用从零摸，以该文档为起点、再向各工具官方参数核对。仓库本身 GPL 无碍（我们只引用事实，不复制代码）。
+3. **纠正一处等价覆盖判断**：「温度 → MSAcpi_ThermalZoneTemperature」在桌面平台常缺失（无此 WMI 命名空间），温度传感器读取是真实的能力缺口，HWiNFO /LOG 可作为候选（商用需 Pro 授权，逐项核实）。
 
 ## 落地形态（当某个工具过审后）
 
