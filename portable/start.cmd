@@ -34,6 +34,15 @@ if not exist "%DSH_PROFILE%" (
 
 set "PATH=%PORTABLE_DIR%runtime\node;%PATH%"
 
+ping -n 1 -w 2000 223.5.5.5 >nul 2>&1
+if errorlevel 1 (
+  echo 当前无网络，无法启动 Only-U 在线会话。
+  echo 请双击 portable\diagnose.cmd 完成 U 盘体检。
+  echo.
+  pause
+  exit /b 1
+)
+
 set "DEEPSEEK_API_KEY="
 set "DEEPSEEK_BASE_URL="
 if exist "%ENV_FILE%" (

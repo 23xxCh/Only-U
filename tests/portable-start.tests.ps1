@@ -140,6 +140,15 @@ It 'portable start command prepares the baked runtime' {
     Assert-True ($text.Contains('set "DSH_HOME=%PORTABLE_DIR%runtime\dsh"')) 'portable\start.cmd does not set DSH_HOME to the baked dsh directory.'
 }
 
+It 'portable start command performs an offline preflight before the Key check' {
+    $text = Read-Text $StartCmd $Gbk
+    $networkIndex = $text.IndexOf('ping -n 1 -w 2000 223.5.5.5')
+    $keyIndex = $text.IndexOf('set "DEEPSEEK_API_KEY="')
+    Assert-True ($networkIndex -ge 0) 'portable\start.cmd is missing the ping offline preflight.'
+    Assert-True ($keyIndex -gt $networkIndex) 'portable\start.cmd must run the offline preflight before the Key check.'
+    Assert-True ($text.Contains('diagnose.cmd')) 'portable\start.cmd does not point offline users to diagnose.cmd.'
+}
+
 It 'portable start command launches dsh-tui without pnpm or headless' {
     $text = Read-Text $StartCmd $Gbk
     Assert-True ($text.Contains('--profile dsh-tui')) 'portable\start.cmd does not launch the dsh-tui profile.'
