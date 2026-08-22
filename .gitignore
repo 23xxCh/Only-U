@@ -16,3 +16,4 @@ build/
 .scratch/
 wxcontext/
 portable/.dsh-home/
+portable/runtime/

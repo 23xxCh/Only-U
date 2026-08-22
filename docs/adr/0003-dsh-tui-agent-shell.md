@@ -22,7 +22,7 @@ dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
 
 包名：`@deepseek-harness-tui/dsh-tui`。文档里的 `github:deepseek-harness/turtle-ui` 仓库不存在，不要用。
 
-Profile 在本机 `%USERPROFILE%\.dsh\profiles\dsh-tui`，不进 Git。U 盘烘焙时拷到 `portable\.dsh-home\profiles\dsh-tui`，由 `start.cmd` 设 `DSH_HOME`。
+Profile 在本机 `%USERPROFILE%\.dsh\profiles\dsh-tui`，不进 Git。U 盘 **烘焙**（[ADR-0005](0005-usb-baked-dsh-runtime.md)）拷到 `portable\runtime\dsh\profiles\dsh-tui`，`start.cmd` 设 `DSH_HOME` 为 `portable\runtime\dsh`。不要把 `dsh/node_modules` 整包拷上 FAT32。
 
 Key 只放 `portable\.env`（gitignore）。`upstream drift` 警告可忽略，直到 TUI 发新版本再 `plugin add @…@版本`。开发基座已切换到 dsh-TUI 源码快照（`dsh-tui/`），harness 源码不再 vendor，见 [ADR-0004](0004-dev-base-dsh-tui.md)。
 

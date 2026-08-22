@@ -1,6 +1,6 @@
 # Only-U PRD：dsh-TUI 开发路线
 
-- 文档状态：**本场开发基线（需求面）**。交付与协作基线是 [`plan.md`](plan.md)，设计基线是 [`designs/only-u-hackathon.md`](designs/only-u-hackathon.md)，决策见 [`adr/`](adr/)。冲突时以 ADR 为准。
+- 文档状态：**路线笔记，不是实现依据。** 交付以 [`plan.md`](plan.md) + [ADR-0005](adr/0005-usb-baked-dsh-runtime.md) 为准。冲突时以 ADR-0002（范围）和 ADR-0005（烤盘）为准。
 - 日期：2026-08-22
 - 路线决策：[ADR-0004](adr/0004-dev-base-dsh-tui.md)（本文是其需求展开）
 - 取代关系：`docs/Only-U-项目需求文档.md`（长 PRD）仍是归档证据，不是基线（[ADR-0002](adr/0002-canonical-hackathon-scope.md)）。本文不扩范围，只换技术路线。

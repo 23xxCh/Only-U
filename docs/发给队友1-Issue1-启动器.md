@@ -67,13 +67,16 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
 
 2. 如果存在 `portable\runtime\node\node.exe`，把它加到「当前 cmd 窗口」的 PATH 前面。不要改用户机器的系统 PATH。
 
-3. 启动命令不要再用 `pnpm dsh`，也不要用 `--profile headless`。评委机没有全局 pnpm/Node。开发基座是 dsh-TUI（ADR-0004）：运行时用 npm 版 dsh CLI。用盘上的 node.exe 跑烘焙的 CLI：
-   `<仓库根>\portable\runtime\dsh\node_modules\@deepseek-ai\dsh\lib\bin.js --profile dsh-tui`
-   `portable\runtime\dsh\node_modules` 从开发机 npm 全局目录拷贝（`%APPDATA%\npm\node_modules`，至少含整棵 `@deepseek-ai` 及其依赖）。`DSH_HOME` 指到 `portable\.dsh-home`。烘焙时要把 dsh-tui profile 放到 `%DSH_HOME%\profiles\dsh-tui`（可从本机 `%USERPROFILE%\.dsh\profiles\dsh-tui` 拷）。不要调用 TUI 的 `/update`。
+3. 启动命令不要再用 `pnpm dsh`，也不要用 `--profile headless`。评委机没有全局 pnpm。用盘上的 node.exe 跑：
+   `portable\runtime\dsh\lib\bin.js --profile dsh-tui`
+   这是 **烘焙** 出的扁平 CLI（[ADR-0005](../adr/0005-usb-baked-dsh-runtime.md)），不是仓库里的 `dsh\apps\cli\lib\bin.js`。
+   `DSH_HOME` 设为 `portable\runtime\dsh`。烘焙时把本机 `%USERPROFILE%\.dsh\profiles\dsh-tui` 拷到 `%DSH_HOME%\profiles\dsh-tui`。
+   **禁止**把 `dsh\node_modules` 整包拷上 U 盘（FAT32 + pnpm 符号链接会复制爆炸）。运行时用 `scripts\bake-usb.ps1` 或同等的 `pnpm --filter @deepseek-ai/dsh deploy --prod --legacy --config.node-linker=hoisted`。不要调用 TUI 的 `/update`。不要从 `%APPDATA%\npm` 拷全局 node_modules。
 
 4. 下面任一情况，立即失败退出（非 0），屏幕用中文人话说明原因，并告诉用户改跑 `portable\diagnose.cmd`：
    - 找不到 portable\runtime\node\node.exe
-   - 找不到 `portable\runtime\dsh\node_modules\@deepseek-ai\dsh\lib\bin.js`（还没烘焙 npm 版 CLI）
+   - 找不到 portable\runtime\dsh\lib\bin.js（还没烘焙）
+   - 找不到 portable\runtime\dsh\profiles\dsh-tui\package.json
    - 没有 portable\.env，或里面 DEEPSEEK_API_KEY 为空
    - 不要在缺 Key 时把 DSH 丢进去转圈
 

@@ -56,7 +56,7 @@ B 的地板等于 A。有网壳是 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-
 
 ## Distribution
 
-U 盘拷贝仓库 `portable/`，可选烘焙 node.exe + dsh CLI（npm 包目录）+ dsh-tui profile（ADR-0004）。本场不发 npm / 商店。密钥只放 `portable/.env`（gitignore），不进 Git。
+U 盘交付密封运行时：便携 Node + `pnpm deploy` 扁平 CLI + dsh-tui profile，见 [ADR-0005](../adr/0005-usb-baked-dsh-runtime.md)。不要整包拷 `dsh/node_modules`。密钥只放 `portable/.env`（gitignore），不进 Git。
 
 ## Out of scope（本场）
 

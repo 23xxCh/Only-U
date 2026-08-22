@@ -44,7 +44,7 @@
 1. 插 U 盘（或打开仓库里的 `portable/`）。
 2. 无网或 DSH 没编好：跑 `portable\diagnose.cmd`，当场看到 C 盘空间、临时目录、近期错误、打印机。
 3. 跑 `portable\clean.cmd` **预览** 可回收量；说明桌面/文档/下载不会动。
-4. 有网且 DSH 能启动：`portable\start.cmd` 应拉起 **TUI 路径**（`dsh --profile dsh-tui`）。开发机直接 `dsh --profile dsh-tui`（或 `dsh-tui\dsh-tui.cmd`）。对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
+4. 有网且 DSH 能启动：`portable\start.cmd` 应拉起 **TUI 路径**（盘上 `runtime\dsh` + `--profile dsh-tui`，见 [ADR-0005](adr/0005-usb-baked-dsh-runtime.md)）。开发机可先 `cd dsh && pnpm dsh --profile dsh-tui`。对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
 5. 讲稿收束：即插即用、普通人不用装 Agent、安全清理。无线网卡是下一阶段。
 
 ---
@@ -60,7 +60,8 @@ Only-U/
   docs/agents/               GitHub Issues / triage
   portable/                  U盘包：启动、离线诊断/清理
   .dsh/skills/only-u-ops/    给 DSH 读的运维 skill
-  dsh-tui/                   dsh-TUI 源码快照（v0.8.8），默认只读；harness 内核来自 npm，不 vendor
+  dsh/                       Harness 源码快照，烤盘用（ADR-0005）
+  dsh-tui/                   dsh-TUI 0.8.8 源码快照，默认只读；U 盘跑的是 npm 插件不是这份目录
   wxcontext/                 微信导出，已 gitignore，禁止推 GitHub
 ```
 

@@ -2,7 +2,9 @@
 
 官方 `dsh`（DeepSeek Harness）最新版本只内置 `web` 与 `headless` 入口，**没有 TUI 界面**。旧路线把整个 harness 源码 vendor 进 `dsh/` 本地构建（`pnpm install && pnpm run build && pnpm dsh --profile dsh-tui`）：Windows 构建慢、仓库体积大、评委机无法复现。决定删除 `dsh/`，改为**直接使用 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI)**（npm `@deepseek-harness-tui/dsh-tui`）作为有网 Agent 壳与开发基座：运行时用 npm 官方 `dsh` CLI + profile `dsh-tui`（`dsh plugin` 安装），dsh-TUI 源码快照入库 `dsh-tui/`（v0.8.8，见 `dsh-tui/UPSTREAM.md`）作参考与定制基线。harness 内核不再 vendor、不再本地构建。
 
-**Status:** accepted
+**Status:** superseded for USB delivery by [ADR-0005](0005-usb-baked-dsh-runtime.md)
+
+`dsh/` 源码快照已恢复，烤盘仍用它。`dsh-tui/` 源码快照可留作改 TUI 界面的参考；U 盘跑的是 npm 插件 `@deepseek-harness-tui/dsh-tui@0.8.8`，不是直接跑这个目录。不要再删除 `dsh/`。
 
 ## Canonical commands
 
