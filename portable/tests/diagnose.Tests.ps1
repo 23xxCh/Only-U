@@ -112,6 +112,28 @@ Describe 'Only-U offline diagnose' {
         $stopwatch.Elapsed.TotalSeconds | Should BeLessThan 3
     }
 
+    It 'shares one monotonic budget across consecutive bounded reads' {
+        . $diagnoseScript -NoRun
+
+        $previousBudget = $diagnosisBudgetSeconds
+        $previousStopwatch = $diagnosisStopwatch
+        try {
+            $diagnosisBudgetSeconds = 1
+            $diagnosisStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+            $first = Invoke-BoundedRead -TimeoutSeconds 5 -ScriptBlock { Start-Sleep -Seconds 4 }
+            $second = Invoke-BoundedRead -TimeoutSeconds 5 -ScriptBlock { Start-Sleep -Seconds 4 }
+            $stopwatch.Stop()
+
+            $first.Status | Should Be 'TimedOut'
+            $second.Status | Should Be 'TimedOut'
+            $stopwatch.Elapsed.TotalSeconds | Should BeLessThan 2.5
+        } finally {
+            $diagnosisBudgetSeconds = $previousBudget
+            $diagnosisStopwatch = $previousStopwatch
+        }
+    }
+
     It 'counts PnP bucket findings while displaying at most five' {
         . $diagnoseScript -NoRun
 

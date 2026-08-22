@@ -6,6 +6,16 @@ param(
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+$diagnosisBudgetSeconds = 50
+$diagnosisStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+function Get-DiagnosisRemainingTimeout([int]$RequestedTimeoutSeconds) {
+    if ($RequestedTimeoutSeconds -le 0) { return 0 }
+    $remainingSeconds = $diagnosisBudgetSeconds - $diagnosisStopwatch.Elapsed.TotalSeconds
+    if ($remainingSeconds -lt 1) { return 0 }
+    return [int][math]::Min($RequestedTimeoutSeconds, [math]::Floor($remainingSeconds))
+}
+
 function Invoke-BoundedRead {
     param(
         [scriptblock]$ScriptBlock,
@@ -15,8 +25,11 @@ function Invoke-BoundedRead {
 
     $job = $null
     try {
+        $effectiveTimeout = Get-DiagnosisRemainingTimeout -RequestedTimeoutSeconds $TimeoutSeconds
+        if ($effectiveTimeout -le 0) { return [pscustomobject]@{ Status = 'TimedOut'; Value = $null } }
         $job = Start-Job -ScriptBlock $ScriptBlock -ArgumentList $ArgumentList -ErrorAction Stop
-        if ($null -eq (Wait-Job -Job $job -Timeout $TimeoutSeconds)) {
+        $effectiveTimeout = Get-DiagnosisRemainingTimeout -RequestedTimeoutSeconds $TimeoutSeconds
+        if ($effectiveTimeout -le 0 -or $null -eq (Wait-Job -Job $job -Timeout $effectiveTimeout)) {
             Stop-Job -Job $job -ErrorAction SilentlyContinue
             return [pscustomobject]@{ Status = 'TimedOut'; Value = $null }
         }
@@ -172,6 +185,10 @@ function Get-DirSize([string]$path) {
         return [pscustomobject]@{ Status = 'Missing'; Bytes = 0; Files = 0 }
     }
 
+    $effectiveTimeout = Get-DiagnosisRemainingTimeout -RequestedTimeoutSeconds $scanTimeoutSeconds
+    if ($effectiveTimeout -le 0) {
+        return [pscustomobject]@{ Status = 'Skipped'; Bytes = 0; Files = 0 }
+    }
     $job = Start-Job -ArgumentList $path, $maxScanFiles -ScriptBlock {
         param([string]$rootPath, [int]$fileLimit)
         [long]$bytes = 0
@@ -204,7 +221,8 @@ function Get-DirSize([string]$path) {
         return [pscustomobject]@{ Status = 'Complete'; Bytes = $bytes; Files = $files }
     }
     try {
-        if ($null -eq (Wait-Job -Job $job -Timeout $scanTimeoutSeconds)) {
+        $effectiveTimeout = Get-DiagnosisRemainingTimeout -RequestedTimeoutSeconds $scanTimeoutSeconds
+        if ($effectiveTimeout -le 0 -or $null -eq (Wait-Job -Job $job -Timeout $effectiveTimeout)) {
             Stop-Job -Job $job -ErrorAction SilentlyContinue
             return [pscustomobject]@{ Status = 'Skipped'; Bytes = 0; Files = 0 }
         }
