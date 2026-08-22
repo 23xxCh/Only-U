@@ -14,3 +14,5 @@ dist/
 build/
 *.log
 .scratch/
+wxcontext/
+portable/.dsh-home/
