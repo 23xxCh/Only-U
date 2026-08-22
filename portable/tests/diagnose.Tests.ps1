@@ -29,6 +29,10 @@ $driverSuggestion = (Get-Utf8Text (0xE5,0x8E,0xBB,0xE5,0x8E,0x82,0xE5,0x95,0x86,
 $sampleDeviceName = Get-Utf8Text (0xE7,0xA4,0xBA,0xE4,0xBE,0x8B,0xE7,0xBD,0x91,0xE5,0x8D,0xA1)
 $errorCodeMarker = Get-Utf8Text (0xE9,0x94,0x99,0xE8,0xAF,0xAF,0xE7,0xA0,0x81)
 $suggestionMarker = Get-Utf8Text (0xE5,0xBB,0xBA,0xE8,0xAE,0xAE,0xEF,0xBC,0x9A)
+$printerJam = Get-Utf8Text (0xE5,0x8D,0xA1,0xE7,0xBA,0xB8)
+$printerOffline = Get-Utf8Text (0xE8,0x84,0xB1,0xE6,0x9C,0xBA)
+$printerNoPaper = Get-Utf8Text (0xE6,0x97,0xA0,0xE7,0xBA,0xB8)
+$printerNoToner = Get-Utf8Text (0xE7,0xBC,0xBA,0xE7,0xB2,0x89)
 
 function Invoke-DiagnoseOutput {
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -94,6 +98,104 @@ Describe 'Only-U offline diagnose' {
         (Get-HardwareIdSummary -HardwareIds @('PCI\VEN_10EC&DEV_8168&SUBSYS_01234567')) | Should Be 'VEN_10EC&DEV_8168'
         (Get-HardwareIdSummary -HardwareIds @('USB\VID_046D&PID_C534&REV_2900')) | Should Be 'VID_046D&PID_C534'
         (Get-HardwareIdSummary -HardwareIds @('ROOT\UNKNOWN')) | Should Be $null
+    }
+
+    It 'forces a timed-out diagnostic read to complete within its deadline' {
+        . $diagnoseScript -NoRun
+
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $read = Invoke-BoundedRead -TimeoutSeconds 1 -ScriptBlock { Start-Sleep -Seconds 4; 'late result' }
+        $stopwatch.Stop()
+
+        $read.Status | Should Be 'TimedOut'
+        $read.Value | Should Be $null
+        $stopwatch.Elapsed.TotalSeconds | Should BeLessThan 3
+    }
+
+    It 'counts PnP bucket findings while displaying at most five' {
+        . $diagnoseScript -NoRun
+
+        $detail = Get-PnpErrorDetail -Code 28
+        $findings = @(1..6 | ForEach-Object {
+            [pscustomobject]@{
+                Device = [pscustomobject]@{ Name = "device-$_"; PNPClass = 'Net'; ConfigManagerErrorCode = 28; PNPDeviceID = "PCI\\$_" }
+                Detail = $detail
+            }
+        })
+        $bucket = Get-PnpBucketDisplay -Findings $findings -BucketName 'missing-driver'
+
+        $bucket.Count | Should Be 6
+        $bucket.Entries.Count | Should Be 5
+    }
+
+    It 'uses distinct hardware and disabled remediation suggestions' {
+        . $diagnoseScript -NoRun
+
+        $hardware = Get-PnpErrorDetail -Code 10
+        $disabled = Get-PnpErrorDetail -Code 22
+
+        $hardware.Bucket | Should Be 'suspected-hardware'
+        $disabled.Bucket | Should Be 'disabled'
+        $hardware.Suggestion | Should Not Be $disabled.Suggestion
+    }
+
+    It 'uses only the first hardware ID and only for missing-driver findings' {
+        . $diagnoseScript -NoRun
+
+        (Get-HardwareIdSummary -HardwareIds @('PCI\VEN_10EC&DEV_8168&SUBSYS_FIRST', 'USB\VID_046D&PID_C534')) | Should Be 'VEN_10EC&DEV_8168'
+        $reader = {
+            param($instanceId)
+            if ($instanceId -ne 'PCI\MISSING') { throw 'unexpected hardware-ID instance' }
+            return [pscustomobject]@{ Data = @('PCI\VEN_10EC&DEV_8168&SUBSYS_FIRST', 'USB\VID_046D&PID_C534') }
+        }
+        $missingFinding = [pscustomobject]@{
+            Device = [pscustomobject]@{ Name = 'missing'; PNPClass = 'Net'; ConfigManagerErrorCode = 28; PNPDeviceID = 'PCI\MISSING' }
+            Detail = Get-PnpErrorDetail -Code 28
+        }
+        $disabledFinding = [pscustomobject]@{
+            Device = [pscustomobject]@{ Name = 'disabled'; PNPClass = 'Net'; ConfigManagerErrorCode = 22; PNPDeviceID = 'PCI\DISABLED' }
+            Detail = Get-PnpErrorDetail -Code 22
+        }
+
+        (Get-PnpFindingLine -Finding $missingFinding -HardwareIdReader $reader) | Should BeLike '*VEN_10EC&DEV_8168*'
+        Get-PnpFindingLine -Finding $disabledFinding -HardwareIdReader { throw 'disabled finding must not read hardware IDs' } | Out-Null
+    }
+
+    It 'skips unreadable hardware ID properties without failing the PnP finding' {
+        . $diagnoseScript -NoRun
+
+        $device = [pscustomobject]@{ PNPDeviceID = 'PCI\UNREADABLE' }
+        $calls = New-Object System.Collections.ArrayList
+        $unreadableReader = {
+            param($instanceId)
+            [void]$calls.Add($instanceId)
+            throw 'unreadable'
+        }
+
+        (Get-PnpHardwareIdSummary -Device $device -PropertyReader $unreadableReader) | Should Be $null
+        $calls.Count | Should Be 1
+        $calls[0] | Should Be 'PCI\UNREADABLE'
+    }
+
+    It 'classifies spooler, printer errors, ports, and conclusions from controlled facts' {
+        . $diagnoseScript -NoRun
+
+        (Get-PrinterDetectedErrorText -DetectedErrorState 8) | Should Be $printerJam
+        (Get-PrinterDetectedErrorText -DetectedErrorState 9) | Should Be $printerOffline
+        (Get-PrinterDetectedErrorText -DetectedErrorState 2) | Should Be $printerNoPaper
+        (Get-PrinterDetectedErrorText -DetectedErrorState 5) | Should Be $printerNoToner
+
+        $wsdOffline = Get-PrinterPortHint -PortName 'WSD-123' -PrinterStatus 'Offline'
+        $wsdOffline.Kind | Should Be 'connection'
+        $wsdOffline.Action | Should Be 'network-wsd'
+        (Get-PrinterPortHint -PortName 'IP_192.0.2.1' -PrinterStatus 'Normal').Action | Should Be 'ping'
+        (Get-PrinterPortHint -PortName 'USB001' -PrinterStatus 'Normal').Action | Should Be 'inspect-pnp'
+
+        $offlinePrinter = [pscustomobject]@{ PortName = 'WSD-123'; PrinterStatus = 'Offline'; DriverName = 'installed driver' }
+        (Get-PrinterConclusion -Printer $offlinePrinter -SpoolerStatus 'Running' -DetectedError $null).Kind | Should Be 'connection'
+        (Get-PrinterConclusion -Printer $offlinePrinter -SpoolerStatus 'Stopped' -DetectedError $null).Kind | Should Be 'service'
+        $serializedOfflinePrinter = [pscustomobject]@{ PortName = 'WSD-123'; PrinterStatus = 7; DriverName = 'installed driver' }
+        (Get-PrinterConclusion -Printer $serializedOfflinePrinter -SpoolerStatus 'Running' -DetectedError $null).Kind | Should Be 'connection'
     }
 
     It 'caps a large TEMP scan and explains that it was skipped' {
