@@ -1,5 +1,26 @@
 # 发给队友 2：Issue #2 诊断报告 + TUI 首轮
 
+## 当前状态
+
+- 状态：**已实现，PR 待合并**
+- 分支：`feat/2-diagnose-scan-cap`
+- PR：[23xxCh/Only-U#5](https://github.com/23xxCh/Only-U/pull/5)
+- Issue：[23xxCh/Only-U#2](https://github.com/23xxCh/Only-U/issues/2)（PR 正文含 `Closes #2`）
+- 最近验证：2026-08-22，Windows PowerShell 5.1 下 Pester 4/4 通过
+
+已交付：
+
+- TEMP 类目录扫描上限为每个目录 8 秒或 20,000 个文件；扫描前显示「正在扫描」，超限显示「跳过：太大或超时」。
+- 目录扫描使用可终止后台作业，拒绝 UNC 根路径并跳过重解析点，避免沿链接扩大扫描范围。
+- 保留磁盘、内存、近期 System 错误和打印机段；新增占内存进程、启动项数量和 PnP 驱动错误码线索，全部只读。
+- PnP 异常依据 `Win32_PnPEntity.ConfigManagerErrorCode`，避免把普通 `Unknown` 状态误报成驱动故障。
+- `only-u-ops` 要求 TUI **运维会话**先跑 **诊断**，再跑 **清理**预览；只有用户明确说「确认」「执行」或同等确认后才允许 `-Execute`。
+- `portable\clean.cmd` 验证仍为预览模式，桌面、文档、下载和图片不在删除候选；`diagnose.ps1` 仍为 UTF-8 BOM。
+
+未改动：`portable/start.cmd`、`portable/clean.ps1`、`dsh/`、`dsh-tui/`。
+
+以下内容保留为原始开工记录。
+
 队长只做需求/架构。你（或你的 agent）只写代码，开 PR，不要直推 `main`。
 
 - 仓库：https://github.com/23xxCh/Only-U
