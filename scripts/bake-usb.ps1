@@ -1,4 +1,4 @@
-# Bake a host-independent Only-U USB pack.
+﻿# Bake a host-independent Only-U USB pack.
 # Run on a dev machine that already has: pnpm, built dsh/, profile dsh-tui.
 # Usage: powershell -File scripts\bake-usb.ps1 -Dest F:\Only-U
 param(
@@ -37,7 +37,7 @@ New-Item -ItemType Directory -Path $destScope -Force | Out-Null
 Get-ChildItem (Join-Path $Dsh 'vendor') -Directory | ForEach-Object {
   $pkgFile = Join-Path $_.FullName 'package.json'
   if (-not (Test-Path $pkgFile)) { return }
-  $name = (Get-Content $pkgFile -Raw | ConvertFrom-Json).name
+  $name = ([IO.File]::ReadAllText($pkgFile) | ConvertFrom-Json).name
   if ($name -notlike '@deepseek-ai/*') { return }
   $leaf = $name.Substring('@deepseek-ai/'.Length)
   $out = Join-Path $destScope $leaf
@@ -55,7 +55,7 @@ foreach ($rootName in @('packages', 'vendor', 'apps', 'native')) {
   Get-ChildItem $root -Recurse -Filter package.json -File -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notmatch '\\node_modules\\' } |
     ForEach-Object {
-      $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
+      $json = [IO.File]::ReadAllText($_.FullName) | ConvertFrom-Json
       if ($json.name -notlike '@deepseek-ai/*') { return }
       $leaf = $json.name.Substring('@deepseek-ai/'.Length)
       $out = Join-Path $destScope $leaf
@@ -69,7 +69,7 @@ foreach ($rootName in @('packages', 'vendor', 'apps', 'native')) {
 
 $bootJs = Join-Path $Staging 'node_modules\@deepseek-ai\dsh-app-boot\lib\index.js'
 if (Test-Path $bootJs) {
-  $js = [IO.File]::ReadAllText($bootJs)
+  $js = [IO.File]::ReadAllText($bootJs).Replace("`r`n", "`n")
   $old = @'
 	if (stat !== void 0) {
 		if (!stat.isSymbolicLink()) throw new Error(`dsh: ${link} exists and is not a symlink; remove it so dsh can manage the installation fallback`);
@@ -99,6 +99,8 @@ if (Test-Path $bootJs) {
 		throw error;
 	}
 '@
+  $old = $old.Replace("`r`n", "`n")
+  $new = $new.Replace("`r`n", "`n")
   if ($js.Contains($old)) {
     [IO.File]::WriteAllText($bootJs, $js.Replace($old, $new))
     Write-Host '   patched dsh-app-boot ensureSymlink for FAT32'
@@ -145,67 +147,28 @@ if ((Test-Path $envSrc) -and -not (Test-Path $envDst)) {
   Copy-Item -LiteralPath $envSrc -Destination $envDst
 }
 
-Write-Host "== 5. start.cmd + 盘根入口"
-# cmd.exe on Chinese Windows reads .cmd as GBK, not UTF-8. UTF-8 BOM splits parentheses.
+Write-Host "== 5. agent-presets 实体拷贝（FAT32 无 junction，修 U 盘 agent 零工具 P0）"
+$presetSrc = Join-Path $runtimeDsh 'config\agent-presets'
+Assert-Path (Join-Path $presetSrc 'standard\agent.cordis.yml') 'dsh 构建产物缺少 config\agent-presets\standard（dsh 版本变化？先核对）'
+$presetDst = Join-Path $runtimeDsh 'profiles\node_modules\@deepseek-ai\dsh\config\agent-presets'
+New-Item -ItemType Directory -Path $presetDst -Force | Out-Null
+cmd /c "robocopy `"$presetSrc`" `"$presetDst`" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP"
+if ($LASTEXITCODE -ge 8) { throw "robocopy agent-presets failed: $LASTEXITCODE" }
+# 仓库自有 preset（如 only-u-repair）同步进两个 preset 根
+$repoPresets = Join-Path $Repo 'presets'
+if (Test-Path $repoPresets) {
+  Get-ChildItem $repoPresets -Directory | ForEach-Object {
+    foreach ($root in @($presetSrc, $presetDst)) {
+      cmd /c "robocopy `"$($_.FullName)`" `"$(Join-Path $root $_.Name)`" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP"
+      if ($LASTEXITCODE -ge 8) { throw "robocopy preset $($_.Name) failed: $LASTEXITCODE" }
+    }
+  }
+}
+
+Write-Host "== 6. start.cmd + 盘根入口"
+# start.cmd 唯一源 = 仓库 portable\start.cmd（GBK 无 BOM、含 #27 单实例锁），不再维护内联副本
 $gbk = [Text.Encoding]::GetEncoding(936)
-$start = @'
-@echo off
-setlocal EnableExtensions
-set "PORTABLE=%~dp0"
-for %%I in ("%~dp0..") do set "ROOT=%%~fI"
-pushd "%ROOT%"
-
-if exist "%PORTABLE%.env" (
-  for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%PORTABLE%.env") do (
-    if not "%%A"=="" set "%%A=%%B"
-  )
-)
-
-set "NODE=%PORTABLE%runtime\node\node.exe"
-set "BIN=%PORTABLE%runtime\dsh\lib\bin.js"
-set "DSH_HOME=%PORTABLE%runtime\dsh"
-
-echo Only-U USB pack
-echo   diagnose: diagnose.cmd
-echo   clean preview: clean.cmd
-echo.
-
-if not exist "%NODE%" (
-  echo Missing Node: portable\runtime\node\node.exe
-  echo Run diagnose.cmd instead.
-  goto :fail
-)
-if not exist "%BIN%" (
-  echo Missing CLI: portable\runtime\dsh\lib\bin.js
-  echo Run diagnose.cmd instead.
-  goto :fail
-)
-if not exist "%DSH_HOME%\profiles\dsh-tui\package.json" (
-  echo Missing TUI profile: portable\runtime\dsh\profiles\dsh-tui
-  echo Run diagnose.cmd instead.
-  goto :fail
-)
-if "%DEEPSEEK_API_KEY%"=="" (
-  echo Missing DEEPSEEK_API_KEY in portable\.env
-  echo Run diagnose.cmd if offline.
-  goto :fail
-)
-
-set "PATH=%PORTABLE%runtime\node;%PATH%"
-"%NODE%" "%BIN%" --profile dsh-tui %*
-set "ERR=%ERRORLEVEL%"
-if not "%ERR%"=="0" goto :fail
-popd
-exit /b 0
-
-:fail
-echo.
-echo Agent failed to start. Press any key.
-pause >nul
-popd
-exit /b 1
-'@
-[IO.File]::WriteAllText((Join-Path $Dest 'portable\start.cmd'), $start, $gbk)
+Copy-Item -LiteralPath (Join-Path $Repo 'portable\start.cmd') -Destination (Join-Path $Dest 'portable\start.cmd') -Force
 
 function Write-Launcher($name, $body) {
   [IO.File]::WriteAllText((Join-Path $Dest $name), $body, $gbk)
@@ -221,8 +184,10 @@ Write-Launcher 'Start-Agent.cmd' $wrap
 $nodeOut = Join-Path $runtimeNode 'node.exe'
 $binOut = Join-Path $runtimeDsh 'lib\bin.js'
 Write-Host '== 校验 CLI --help'
-& $nodeOut $binOut --help | Select-Object -First 8
-if ($LASTEXITCODE -ne 0) { throw 'baked CLI --help failed' }
+$helpOut = & $nodeOut $binOut --help 2>&1
+$helpExit = $LASTEXITCODE
+$helpOut | Select-Object -First 8
+if ($helpExit -ne 0) { throw "baked CLI --help failed: $helpExit" }
 
 Write-Host ''
 Write-Host "烤盘完成: $Dest"
