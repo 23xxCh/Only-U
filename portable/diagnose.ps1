@@ -528,3 +528,57 @@ if (-not $smartReadable -or $smartFacts.Count -eq 0) {
 Write-Output ''
 Write-Output 'Next: if online, give this report to the agent. Clean preview: portable\clean.cmd'
 Write-Output 'USB Wi-Fi path: not in this hackathon.'
+
+# --- 接下来怎么办（白话建议，纯规则映射，离线） ---
+function Get-NextSteps {
+    $steps = @()
+    $systemDisk = @($diskFacts | Where-Object { $_.DeviceId -eq 'C:' } | Select-Object -First 1)[0]
+    if ($systemDisk -and ($systemDisk.FreePctRaw -lt 5 -or $systemDisk.FreeSpace -lt 1GB)) {
+        $steps += ('C 盘只剩 {0}%，亮红灯 → 双击 U 盘里的「清理预览.cmd」，先看清单再按 Y 回收空间' -f $systemDisk.FreePct)
+    }
+    if ($null -ne $committedPercentRaw -and $committedPercentRaw -gt 90) {
+        $steps += ('内存不足（提交内存已用 {0}%）→ 关掉不用的程序；经常发生建议加内存条' -f $committedPercent)
+    }
+    if (@($criticalEvents | Where-Object { $_.Id -eq 2004 }).Count -gt 0) {
+        $steps += '系统近期内存压力过高（事件 2004）→ 关掉不用的程序；经常发生建议加内存条'
+    }
+    $storageEvents = @($criticalEvents | Where-Object { $_.Id -in 129, 153 })
+    if ($storageEvents.Count -ge 3) {
+        $steps += ('硬盘最近 7 天响应慢 {0} 次 → 尽快备份重要文件，让维修师傅检查 SMART' -f $storageEvents.Count)
+    }
+    if (@($smartFacts | Where-Object { $_.HealthStatus -ne 'Healthy' -or ($null -ne $_.ReadErrorsUncorrected -and $_.ReadErrorsUncorrected -ne 0) }).Count -gt 0) {
+        $steps += '硬盘健康告警 → 立即备份重要文件，考虑换盘'
+    }
+    $printerProblems = @()
+    try {
+        $printerProblems = @(Get-CimInstance Win32_PnPEntity -ErrorAction Stop |
+            Where-Object { $_.PNPClass -eq 'Printer' -and $null -ne $_.ConfigManagerErrorCode -and $_.ConfigManagerErrorCode -ne 0 })
+    } catch {
+        $printerProblems = @()
+    }
+    if (@($printerProblems | Where-Object { $_.ConfigManagerErrorCode -eq 28 }).Count -gt 0) {
+        $steps += '打印机驱动缺失（CM_PROB 28）→ 到打印机厂商官网下载对应型号驱动，或去电脑维修店'
+    }
+    $otherPrinterProblems = @($printerProblems | Where-Object { $_.ConfigManagerErrorCode -ne 28 })
+    if ($otherPrinterProblems.Count -gt 0) {
+        $steps += ('打印机驱动异常（CM_PROB {0}）→ 先重装该设备驱动再看' -f $otherPrinterProblems[0].ConfigManagerErrorCode)
+    }
+    return $steps
+}
+
+Write-Output ''
+Write-Output '=== 接下来怎么办 ==='
+$nextSteps = @(Get-NextSteps)
+if ($nextSteps.Count -eq 0) {
+    Write-Output '系统体检通过，未见红灯。建议 30 天后再查一次。'
+} else {
+    $shownSteps = @($nextSteps | Select-Object -First 5)
+    for ($i = 0; $i -lt $shownSteps.Count; $i++) {
+        Write-Output ("{0}. {1}" -f ($i + 1), $shownSteps[$i])
+    }
+    if ($nextSteps.Count -gt 5) {
+        Write-Output ("还有 {0} 条，详见上方红灯清单" -f ($nextSteps.Count - 5))
+    }
+    Write-Output ''
+    Write-Output '处理不了？带 U 盘去维修店，给师傅看 reports\ 下的 diagnose-*.log。'
+}
