@@ -173,7 +173,7 @@ Copy-Item -LiteralPath (Join-Path $Repo 'portable\start.cmd') -Destination (Join
 function Write-Launcher($name, $body) {
   [IO.File]::WriteAllText((Join-Path $Dest $name), $body, $gbk)
 }
-$wrap = "@echo off`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\start.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
+$wrap = "@echo off`r`ntitle Only-U 维修智能体`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\start.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 $wrapDiag = "@echo off`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\diagnose.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 $wrapClean = "@echo off`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\clean.cmd`" -Interactive %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 Write-Launcher '诊断.cmd' $wrapDiag
