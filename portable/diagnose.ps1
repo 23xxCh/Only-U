@@ -1,6 +1,68 @@
 ﻿# Only-U offline diagnose. No LLM. Read-only.
+param(
+    [switch]$NoRun
+)
+
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+function Get-PnpErrorDetail([int]$Code) {
+    switch ($Code) {
+        1  { return [pscustomobject]@{ Translation = '未配置'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        10 { return [pscustomobject]@{ Translation = '无法启动'; Suggestion = '重新插拔设备、换接口，必要时送修'; Bucket = 'suspected-hardware' } }
+        22 { return [pscustomobject]@{ Translation = '已被禁用'; Suggestion = '在设备管理器中启用该设备'; Bucket = 'disabled' } }
+        28 { return [pscustomobject]@{ Translation = '驱动未安装'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        29 { return [pscustomobject]@{ Translation = '电源不足被禁用'; Suggestion = '在设备管理器中启用该设备'; Bucket = 'disabled' } }
+        37 { return [pscustomobject]@{ Translation = '驱动加载失败'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        39 { return [pscustomobject]@{ Translation = '驱动加载失败'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        43 { return [pscustomobject]@{ Translation = '设备自报故障'; Suggestion = '重新插拔设备、换接口，必要时送修'; Bucket = 'suspected-hardware' } }
+        45 { return [pscustomobject]@{ Translation = '设备已拔除'; Suggestion = '重新连接设备后再检查状态'; Bucket = 'other' } }
+        48 { return [pscustomobject]@{ Translation = '被策略阻止'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        52 { return [pscustomobject]@{ Translation = '驱动未签名'; Suggestion = '去厂商官网或 Windows Update 可选更新找驱动'; Bucket = 'missing-driver' } }
+        default { return [pscustomobject]@{ Translation = '未知状态'; Suggestion = '在设备管理器中查看设备状态'; Bucket = 'other' } }
+    }
+}
+
+function Format-PnpDeviceLine($Device, $Detail) {
+    $name = if ($Device.Name) { $Device.Name } else { '未知设备' }
+    $class = if ($Device.PNPClass) { $Device.PNPClass } else { '未知类' }
+    return ('{0} [{1}] 错误码{2}（{3}）→ 建议：{4}' -f $name, $class, $Device.ConfigManagerErrorCode, $Detail.Translation, $Detail.Suggestion)
+}
+
+function Get-HardwareIdSummary([string[]]$HardwareIds) {
+    if ($null -eq $HardwareIds -or $HardwareIds.Count -eq 0 -or [string]::IsNullOrWhiteSpace($HardwareIds[0])) { return $null }
+    $match = [regex]::Match($HardwareIds[0], '(?i)(VEN_[0-9A-F]{4}&DEV_[0-9A-F]{4}|VID_[0-9A-F]{4}&PID_[0-9A-F]{4})')
+    if ($match.Success) { return $match.Groups[1].Value.ToUpperInvariant() }
+    return $null
+}
+
+function Get-PnpHardwareIdSummary($Device) {
+    if ([string]::IsNullOrWhiteSpace($Device.PNPDeviceID)) { return $null }
+    try {
+        $property = Get-PnpDeviceProperty -InstanceId $Device.PNPDeviceID -KeyName 'DEVPKEY_Device_HardwareIds' -ErrorAction Stop
+        return Get-HardwareIdSummary -HardwareIds @($property.Data)
+    } catch {
+        return $null
+    }
+}
+
+function Get-PrinterDetectedErrorText($DetectedErrorState) {
+    switch ([int]$DetectedErrorState) {
+        8 { return '卡纸' }
+        9 { return '脱机' }
+        { $_ -in 2, 4 } { return '无纸' }
+        { $_ -in 3, 5 } { return '缺粉' }
+        default { return $null }
+    }
+}
+
+function Get-PrinterPortHint([string]$PortName) {
+    if ([string]::IsNullOrWhiteSpace($PortName)) { return '端口信息不可读，需结合连接状态判断。' }
+    if ($PortName -match '(?i)^WSD') { return 'WSD 端口脱机时，网络或 WSD 协议可能有问题。' }
+    if ($PortName -match '(?i)(TCP|IP_)') { return 'TCP/IP 端口可用 ping 验证连通性。' }
+    if ($PortName -match '(?i)^USB') { return 'USB 端口请检查即插即用设备状态。' }
+    return ('端口 {0}，需结合连接状态判断。' -f $PortName)
+}
 
 function Format-Bytes([long]$n) {
     if ($n -lt 0) { return 'n/a' }
@@ -65,6 +127,8 @@ function Get-DirSize([string]$path) {
         Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
     }
 }
+
+if ($NoRun) { return }
 
 $diskFacts = @()
 try {
@@ -261,25 +325,78 @@ if (-not $criticalEventsReadable) {
 
 Write-Output ''
 Write-Output '--- printers ---'
+$spooler = $null
+try {
+    $spooler = Get-Service -Name Spooler -ErrorAction Stop
+    if ($spooler.Status -eq 'Stopped') {
+        Write-Output '打印服务 Spooler: Stopped（打印服务未运行：这是软件问题，不是缺少驱动）'
+    } else {
+        Write-Output ('打印服务 Spooler: {0}' -f $spooler.Status)
+    }
+} catch {
+    Write-Output '无法读取打印服务 Spooler 状态'
+}
+
+$printerStates = @()
+try {
+    $printerStates = @(Get-CimInstance Win32_Printer -ErrorAction Stop)
+} catch {
+    $printerStates = @()
+}
 try {
     $printers = @(Get-Printer -ErrorAction Stop)
     if ($printers.Count -eq 0) { Write-Output '未发现打印机' }
     $printers | ForEach-Object {
-        Write-Output ("{0}  status={1}  driver={2}" -f $_.Name, $_.PrinterStatus, $_.DriverName)
+        $printer = $_
+        Write-Output ("{0}  status={1}  driver={2}" -f $printer.Name, $printer.PrinterStatus, $printer.DriverName)
+
+        $printerState = @($printerStates | Where-Object { $_.Name -eq $printer.Name } | Select-Object -First 1)[0]
+        $detectedError = if ($printerState) { Get-PrinterDetectedErrorText -DetectedErrorState $printerState.DetectedErrorState } else { $null }
+        if ($detectedError) {
+            Write-Output ('  检测到 {0}：这是设备/耗材证据，不是驱动证据。' -f $detectedError)
+        }
+        Write-Output ('  {0}' -f (Get-PrinterPortHint -PortName $printer.PortName))
+        if ($spooler -and $spooler.Status -eq 'Stopped') {
+            Write-Output '  结论：打印服务未运行（软件问题，不是缺少驱动）。'
+        } elseif ($detectedError) {
+            Write-Output ('  结论：{0} 属于设备/耗材证据，不是驱动证据；请同时检查连接。' -f $detectedError)
+        } elseif (-not [string]::IsNullOrWhiteSpace($printer.DriverName)) {
+            Write-Output '  结论：驱动已装（仅凭驱动名，仍需结合连接状态确认）。'
+        } else {
+            Write-Output '  结论：未见驱动名，需结合即插即用设备状态确认驱动情况。'
+        }
     }
 } catch {
     Write-Output '无法读取打印机'
 }
 
 Write-Output ''
-Write-Output '--- PnP devices with driver issue (max 8) ---'
+Write-Output '--- PnP devices with driver issue (capped buckets) ---'
 try {
     $devices = @(Get-CimInstance Win32_PnPEntity -ErrorAction Stop |
-        Where-Object { $_.ConfigManagerErrorCode -ne 0 } |
-        Select-Object -First 8)
+        Where-Object { $_.ConfigManagerErrorCode -ne 0 })
     if ($devices.Count -eq 0) { Write-Output '未发现驱动状态异常的即插即用设备' }
-    $devices | ForEach-Object {
-        Write-Output ("{0}  class={1}  error-code={2}" -f $_.Name, $_.PNPClass, $_.ConfigManagerErrorCode)
+    $deviceFindings = @($devices | ForEach-Object {
+        [pscustomobject]@{ Device = $_; Detail = Get-PnpErrorDetail -Code $_.ConfigManagerErrorCode }
+    })
+    $bucketNames = @(
+        [pscustomobject]@{ Name = 'missing-driver'; Label = '缺少/加载失败/策略阻止的驱动状态' },
+        [pscustomobject]@{ Name = 'suspected-hardware'; Label = '疑似硬件状态' },
+        [pscustomobject]@{ Name = 'disabled'; Label = '已禁用状态' },
+        [pscustomobject]@{ Name = 'other'; Label = '其他已识别或未知状态' }
+    )
+    foreach ($bucket in $bucketNames) {
+        $bucketFindings = @($deviceFindings | Where-Object { $_.Detail.Bucket -eq $bucket.Name })
+        if ($bucketFindings.Count -eq 0) { continue }
+        Write-Output ('{0}（{1} 项，最多显示 5 项）' -f $bucket.Label, $bucketFindings.Count)
+        $bucketFindings | Select-Object -First 5 | ForEach-Object {
+            $line = Format-PnpDeviceLine -Device $_.Device -Detail $_.Detail
+            if ($bucket.Name -eq 'missing-driver') {
+                $hardwareId = Get-PnpHardwareIdSummary -Device $_.Device
+                if ($hardwareId) { $line += ('  硬件ID={0}' -f $hardwareId) }
+            }
+            Write-Output ('  {0}' -f $line)
+        }
     }
 } catch {
     Write-Output '无法读取即插即用设备状态'
