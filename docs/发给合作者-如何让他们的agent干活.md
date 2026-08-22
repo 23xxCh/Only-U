@@ -37,7 +37,7 @@ git config --global user.email "你的邮箱"
 - Issue 在 GitHub：`23xxCh/Only-U`
 - 标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`
 - 领域文档：根目录 `CONTEXT.md` + `docs/adr/`（single-context）
-- 本场范围：`docs/plan.md` + `docs/designs/only-u-hackathon.md`。长 PRD 不是开发基线，见 ADR-0002。有网 Agent 壳是 dsh-TUI，见 ADR-0003。
+- 本场范围：`docs/plan.md` + `docs/prd.md` + `docs/designs/only-u-hackathon.md`。长 PRD 不是开发基线，见 ADR-0002。有网 Agent 壳是 dsh-TUI，开发基座见 ADR-0003、ADR-0004。
 
 agent 会读 `AGENTS.md` 和 `docs/agents/`。
 

@@ -4,7 +4,7 @@
 
 赛事：赤兔 AI 黑客松，产品赛道「单人成军」，深圳湾万丽，**一天半开发 + 半天评奖**。仓库：https://github.com/23xxCh/Only-U
 
-**本文是本场开发基线。** 后写入库的长 PRD（`docs/Only-U-项目需求文档.md`）与设计规格不是实现依据，冲突条款见 [ADR-0002](adr/0002-canonical-hackathon-scope.md)。有网 Agent 壳见 [ADR-0003](adr/0003-dsh-tui-agent-shell.md)。已批准设计：[designs/only-u-hackathon.md](designs/only-u-hackathon.md)。
+**本文是本场开发基线。** 后写入库的长 PRD（`docs/Only-U-项目需求文档.md`）与设计规格不是实现依据，冲突条款见 [ADR-0002](adr/0002-canonical-hackathon-scope.md)。有网 Agent 壳见 [ADR-0003](adr/0003-dsh-tui-agent-shell.md)，开发基座（dsh-TUI）见 [ADR-0004](adr/0004-dev-base-dsh-tui.md)。需求基线：[prd.md](prd.md)。已批准设计：[designs/only-u-hackathon.md](designs/only-u-hackathon.md)。
 
 **现在不要扩功能。** 先按本文对齐，再写代码。领域用词以根目录 `CONTEXT.md` 为准。架构决策见 `docs/adr/`。文档索引见 [README.md](README.md)。
 
@@ -12,7 +12,7 @@
 
 ## 1. 产品是什么
 
-把 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 做成 **U盘包**：用户不会装 Agent、不会配 Skill/MCP，插上就能修常见电脑问题。
+把 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 内核与 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) 终端壳做成 **U盘包**：用户不会装 Agent、不会配 Skill/MCP，插上就能修常见电脑问题。内核与 TUI 都走 npm 分发，不 vendor harness 源码（ADR-0004）。
 
 真实依据（队长实习/学校修机）：U 盘里跑过 Claude Code，一个月几十台机。常见问题是 **C 盘满、卡死、打印机驱动、蓝屏**。
 
@@ -31,9 +31,9 @@
 | CLI / 离线脚本；有网用 **TUI 路径**（dsh-TUI） | 以 Web UI 或 TUI 当无网唯一入口 |
 | DeepSeek API（环境变量 key） | 本地大模型 |
 | **诊断** + 带 **误删防护** 的 **清理** | 杀毒全家桶、重装系统、修 BIOS/黑屏显示器 |
-| DSH **插件** / skill，不改 harness 内核 | Fork 改 `dsh/` 内核 |
+| DSH **插件** / skill，不改 harness 内核 | Fork 改 harness 内核、vendor harness 源码 |
 
-无网：走 **离线路径**，只跑本地 **诊断**。有网走 **TUI 路径**（`pnpm dsh --profile dsh-tui`），Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。不要把「没网就不能诊断」当成产品承诺。
+无网：走 **离线路径**，只跑本地 **诊断**。有网走 **TUI 路径**（`dsh --profile dsh-tui`），Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。不要把「没网就不能诊断」当成产品承诺。
 
 详见 [ADR-0001](adr/0001-software-only-usb-pack.md)、[ADR-0002](adr/0002-canonical-hackathon-scope.md)、[ADR-0003](adr/0003-dsh-tui-agent-shell.md)。
 
@@ -44,7 +44,7 @@
 1. 插 U 盘（或打开仓库里的 `portable/`）。
 2. 无网或 DSH 没编好：跑 `portable\diagnose.cmd`，当场看到 C 盘空间、临时目录、近期错误、打印机。
 3. 跑 `portable\clean.cmd` **预览** 可回收量；说明桌面/文档/下载不会动。
-4. 有网且 DSH 能启动：`portable\start.cmd` 应拉起 **TUI 路径**（`dsh --profile dsh-tui`）。开发机可先 `cd dsh && pnpm dsh --profile dsh-tui`。对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
+4. 有网且 DSH 能启动：`portable\start.cmd` 应拉起 **TUI 路径**（`dsh --profile dsh-tui`）。开发机直接 `dsh --profile dsh-tui`（或 `dsh-tui\dsh-tui.cmd`）。对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
 5. 讲稿收束：即插即用、普通人不用装 Agent、安全清理。无线网卡是下一阶段。
 
 ---
@@ -60,14 +60,14 @@ Only-U/
   docs/agents/               GitHub Issues / triage
   portable/                  U盘包：启动、离线诊断/清理
   .dsh/skills/only-u-ops/    给 DSH 读的运维 skill
-  dsh/                       Harness 快照，默认只读
+  dsh-tui/                   dsh-TUI 源码快照（v0.8.8），默认只读；harness 内核来自 npm，不 vendor
   wxcontext/                 微信导出，已 gitignore，禁止推 GitHub
 ```
 
-插件挂法（实现阶段二选一，先选阻力小的）：
+能力挂法（先选阻力小的）：
 
-1. `dsh/packages/ops/<plugin>/`，走 DSH cookbook。
-2. 根目录 skill + `portable` 脚本（当前骨架已按这条铺了文档入口）。
+1. 根目录 skill + `portable` 脚本（当前骨架已按这条铺了文档入口）。
+2. 定制 TUI 表面：改 `dsh-tui/` 源码（先读 `dsh-tui/ADAPTER.md`，改动以能回上游为前提）。
 
 密钥只放 `portable/.env`（gitignore）。微信原文、wxid、邮箱不进仓库。
 
@@ -96,8 +96,8 @@ Only-U/
 - Issue：`23xxCh/Only-U` GitHub Issues（`docs/agents/issue-tracker.md`）。
 - 标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`。
 - 给别人的 agent：贴 `docs/发给合作者-如何让他们的agent干活.md` 第 3 节，Issue 必须已是 `ready-for-agent`。
-- 改 `dsh/packages` 前读 `dsh/AGENTS.md`。Only-U 用词只用 `CONTEXT.md`。
-- Windows 上 DSH 全量 build 可能慢：演示保底是 `portable\diagnose.cmd`，不要卡在 website/e2e。
+- 改 `dsh-tui/` 前读 `dsh-tui/ADAPTER.md`。Only-U 用词只用 `CONTEXT.md`。
+- 演示保底是 `portable\diagnose.cmd`；TUI 起不来不要现场排障，退回脚本演示。
 
 ---
 

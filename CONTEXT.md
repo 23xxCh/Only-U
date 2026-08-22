@@ -1,6 +1,6 @@
 # Only-U
 
-U盘即插即用的运维 Agent：把 DeepSeek Harness 装进 **U盘包**，用户不用安装 Agent、不用配 Skill/MCP，插上就能做 **诊断** 和带 **误删防护** 的 **清理**。
+U盘即插即用的运维 Agent：把 DeepSeek Harness 内核（npm 分发）与 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) 终端壳装进 **U盘包**，用户不用安装 Agent、不用配 Skill/MCP，插上就能做 **诊断** 和带 **误删防护** 的 **清理**。
 
 ## Language
 
@@ -33,7 +33,7 @@ _Avoid_: 工具, MCP
 _Avoid_: 本地模型
 
 **TUI 路径**:
-有网时的终端运维壳，profile 为 `dsh-tui`（[dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI)）。仍调用 portable 脚本。
+有网时的终端运维壳。官方 dsh 内核无 TUI 界面，由 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) 插件提供（源码快照在 `dsh-tui/`），profile 为 `dsh-tui`。仍调用 portable 脚本。
 _Avoid_: Web 主入口, headless 一句退出, turtle-ui Git URL
 
 **无线网卡路径**:

@@ -4,7 +4,7 @@
 - 状态：**已批准**（队长，2026-08-22）
 - 仓库：https://github.com/23xxCh/Only-U
 - 方案：**Approach B — 脚本地板 + TUI 调同一套脚本**
-- 基线：本文件 + [`docs/plan.md`](../plan.md) + [ADR-0001](../adr/0001-software-only-usb-pack.md) + [ADR-0002](../adr/0002-canonical-hackathon-scope.md) + [ADR-0003](../adr/0003-dsh-tui-agent-shell.md)
+- 基线：本文件 + [`docs/plan.md`](../plan.md) + [`docs/prd.md`](../prd.md) + [ADR-0001](../adr/0001-software-only-usb-pack.md) + [ADR-0002](../adr/0002-canonical-hackathon-scope.md) + [ADR-0003](../adr/0003-dsh-tui-agent-shell.md) + [ADR-0004](../adr/0004-dev-base-dsh-tui.md)
 
 gstack 只在本机当设计工作流，**不要**把 gstack 源码 vendor 进仓库。
 
@@ -44,7 +44,7 @@ B 的地板等于 A。有网壳是 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-
 1. 插盘或打开 `portable\`
 2. `diagnose.cmd`：磁盘、临时目录、系统错误、打印机
 3. `clean.cmd` 预览（不删桌面/文档/下载）
-4. 有网：`cd dsh && pnpm dsh --profile dsh-tui`（交付用 `start.cmd` 包装同一 profile）。Agent 读 `CONTEXT.md` + skill `only-u-ops`，只调现有脚本
+4. 有网：`dsh --profile dsh-tui`（交付用 `start.cmd` 包装同一 profile）。Agent 读 `CONTEXT.md` + skill `only-u-ops`，只调现有脚本
 5. 收束：即插即用、不敢乱删。无线网卡是下一阶段
 
 ## Success
@@ -56,7 +56,7 @@ B 的地板等于 A。有网壳是 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-
 
 ## Distribution
 
-U 盘拷贝仓库 `portable/`，可选已 build 的 `dsh/`。本场不发 npm / 商店。密钥只放 `portable/.env`（gitignore），不进 Git。
+U 盘拷贝仓库 `portable/`，可选烘焙 node.exe + dsh CLI（npm 包目录）+ dsh-tui profile（ADR-0004）。本场不发 npm / 商店。密钥只放 `portable/.env`（gitignore），不进 Git。
 
 ## Out of scope（本场）
 

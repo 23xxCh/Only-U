@@ -6,27 +6,25 @@
 
 ## Canonical commands
 
-开发机（仓库已 `pnpm install` + `pnpm run build`）：
+开发机（`dsh` CLI 已 `npm install -g`，profile 已用 `dsh plugin` 装好；安装与升级命令以 [ADR-0004](0004-dev-base-dsh-tui.md) 为准）：
 
 ```bat
-cd dsh
-pnpm dsh --profile dsh-tui
+dsh --profile dsh-tui
 ```
 
-恢复会话：`pnpm dsh --profile dsh-tui --resume <id>`
+恢复会话：`dsh --profile dsh-tui --resume <id>`
 
 装/升级插件（不要用 Git URL，不要用 TUI 里的 `/update`——它会找全局 `dsh.cmd`）：
 
 ```bat
-cd dsh
-pnpm dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
+dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
 ```
 
 包名：`@deepseek-harness-tui/dsh-tui`。文档里的 `github:deepseek-harness/turtle-ui` 仓库不存在，不要用。
 
 Profile 在本机 `%USERPROFILE%\.dsh\profiles\dsh-tui`，不进 Git。U 盘烘焙时拷到 `portable\.dsh-home\profiles\dsh-tui`，由 `start.cmd` 设 `DSH_HOME`。
 
-Key 只放 `dsh\.env` / `portable\.env`（gitignore）。`upstream drift` 警告可忽略，直到 TUI 发新版本再 `plugin add @…@版本`。
+Key 只放 `portable\.env`（gitignore）。`upstream drift` 警告可忽略，直到 TUI 发新版本再 `plugin add @…@版本`。开发基座已切换到 dsh-TUI 源码快照（`dsh-tui/`），harness 源码不再 vendor，见 [ADR-0004](0004-dev-base-dsh-tui.md)。
 
 ## Do
 
@@ -35,7 +33,7 @@ Key 只放 `dsh\.env` / `portable\.env`（gitignore）。`upstream drift` 警告
 
 ## Do not
 
-- Fork `dsh/` 或 fork dsh-TUI 源码进本仓库
+- Fork harness 内核（内核用 npm 分发版；dsh-TUI 源码以快照形式入库，见 ADR-0004）
 - 把 `~/.dsh` vendor 进 Git
 - 以 Web UI 或 TUI 当无网唯一入口
 - 无网禁止诊断（仍走 ADR-0002）

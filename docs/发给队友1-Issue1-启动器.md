@@ -5,7 +5,7 @@
 - 仓库：https://github.com/23xxCh/Only-U
 - Issue：https://github.com/23xxCh/Only-U/issues/1
 - 协作说明：`docs/发给合作者-如何让他们的agent干活.md`
-- 本场基线：`docs/plan.md`、`docs/designs/only-u-hackathon.md`、ADR-0001、ADR-0002、ADR-0003
+- 本场基线：`docs/plan.md`、`docs/prd.md`、`docs/designs/only-u-hackathon.md`、ADR-0001、ADR-0002、ADR-0003、ADR-0004
 - **不要**按 `docs/Only-U-项目需求文档.md` 做 Web / 在线-only
 
 对方如果还没 clone，先让他做协作说明第 0 节。
@@ -67,13 +67,13 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
 
 2. 如果存在 `portable\runtime\node\node.exe`，把它加到「当前 cmd 窗口」的 PATH 前面。不要改用户机器的系统 PATH。
 
-3. 启动命令不要再用 `pnpm dsh`，也不要用 `--profile headless`。评委机没有全局 pnpm。用盘上的 node.exe 跑：
-   `<仓库根>\dsh\apps\cli\lib\bin.js --profile dsh-tui`
-   仓库根 = start.cmd 的上一级。`DSH_HOME` 指到 `portable\.dsh-home`。烘焙时要把 dsh-tui profile 放到 `%DSH_HOME%\profiles\dsh-tui`（可从本机 `%USERPROFILE%\.dsh\profiles\dsh-tui` 拷）。不要调用 TUI 的 `/update`。
+3. 启动命令不要再用 `pnpm dsh`，也不要用 `--profile headless`。评委机没有全局 pnpm/Node。开发基座是 dsh-TUI（ADR-0004）：运行时用 npm 版 dsh CLI。用盘上的 node.exe 跑烘焙的 CLI：
+   `<仓库根>\portable\runtime\dsh\node_modules\@deepseek-ai\dsh\lib\bin.js --profile dsh-tui`
+   `portable\runtime\dsh\node_modules` 从开发机 npm 全局目录拷贝（`%APPDATA%\npm\node_modules`，至少含整棵 `@deepseek-ai` 及其依赖）。`DSH_HOME` 指到 `portable\.dsh-home`。烘焙时要把 dsh-tui profile 放到 `%DSH_HOME%\profiles\dsh-tui`（可从本机 `%USERPROFILE%\.dsh\profiles\dsh-tui` 拷）。不要调用 TUI 的 `/update`。
 
 4. 下面任一情况，立即失败退出（非 0），屏幕用中文人话说明原因，并告诉用户改跑 `portable\diagnose.cmd`：
    - 找不到 portable\runtime\node\node.exe
-   - 找不到 dsh\apps\cli\lib\bin.js（还没烘焙/没 build）
+   - 找不到 `portable\runtime\dsh\node_modules\@deepseek-ai\dsh\lib\bin.js`（还没烘焙 npm 版 CLI）
    - 没有 portable\.env，或里面 DEEPSEEK_API_KEY 为空
    - 不要在缺 Key 时把 DSH 丢进去转圈
 
@@ -95,7 +95,7 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
 ====================
 不要做什么
 ====================
-- 不要改 dsh/ 源码或 fork 内核
+- 不要改 `dsh-tui/` 源码或 fork 内核
 - 不要改 portable/diagnose.ps1（那是 Issue #2）
 - 不要改 portable/clean.ps1
 - 不要做本地 Web UI、联网门禁产品、41 条 FR；不要 `github:deepseek-harness/turtle-ui`

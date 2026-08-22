@@ -58,7 +58,7 @@ Issue：https://github.com/23xxCh/Only-U/issues/2
 ====================
 主文件：portable/diagnose.ps1
 必要时：.dsh/skills/only-u-ops/SKILL.md（只加一句：诊断走 diagnose.ps1，扫描可能跳过过大目录）
-不要改：portable/start.cmd、portable/clean.ps1、dsh/
+不要改：portable/start.cmd、portable/clean.ps1、dsh-tui/
 
 问题：Get-DirSize 会递归整个 TEMP。评委电脑临时目录可能有几十万小文件，屏幕几分钟没输出，看起来像死机。
 

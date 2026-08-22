@@ -22,4 +22,4 @@ Read `CONTEXT.md` at the repo root and use those terms. Do not invent synonyms.
 - Clean preview: `portable/clean.ps1`
 - Clean execute: `portable/clean.ps1 -Execute`
 
-If `dsh` itself is not built, those scripts still work. Do not modify files under `dsh/` to complete this task.
+If the TUI cannot start, those scripts still work. Do not modify files under `dsh-tui/` to complete this task.
