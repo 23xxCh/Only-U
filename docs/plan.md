@@ -4,7 +4,7 @@
 
 赛事：赤兔 AI 黑客松，产品赛道「单人成军」，深圳湾万丽，**一天半开发 + 半天评奖**。仓库：https://github.com/23xxCh/Only-U
 
-**本文是本场开发基线。** 后写入库的长 PRD（`docs/Only-U-项目需求文档.md`）与设计规格不是实现依据，冲突条款见 [ADR-0002](adr/0002-canonical-hackathon-scope.md)。已批准设计：[designs/only-u-hackathon.md](designs/only-u-hackathon.md)。
+**本文是本场开发基线。** 后写入库的长 PRD（`docs/Only-U-项目需求文档.md`）与设计规格不是实现依据，冲突条款见 [ADR-0002](adr/0002-canonical-hackathon-scope.md)。有网 Agent 壳见 [ADR-0003](adr/0003-dsh-tui-agent-shell.md)。已批准设计：[designs/only-u-hackathon.md](designs/only-u-hackathon.md)。
 
 **现在不要扩功能。** 先按本文对齐，再写代码。领域用词以根目录 `CONTEXT.md` 为准。架构决策见 `docs/adr/`。文档索引见 [README.md](README.md)。
 
@@ -28,14 +28,14 @@
 |---|---|
 | 软件 **U盘包** | **无线网卡路径**（无现货，赛后再做） |
 | Windows 优先 | Mac / Ubuntu 现场适配 |
-| CLI / 离线脚本；浏览器坏了也能诊断 | 以 Web UI 当唯一入口 |
+| CLI / 离线脚本；有网用 **TUI 路径**（dsh-TUI） | 以 Web UI 或 TUI 当无网唯一入口 |
 | DeepSeek API（环境变量 key） | 本地大模型 |
 | **诊断** + 带 **误删防护** 的 **清理** | 杀毒全家桶、重装系统、修 BIOS/黑屏显示器 |
 | DSH **插件** / skill，不改 harness 内核 | Fork 改 `dsh/` 内核 |
 
-无网：走 **离线路径**，只跑本地 **诊断**。有网再让 Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。不要把「没网就不能诊断」当成产品承诺。
+无网：走 **离线路径**，只跑本地 **诊断**。有网走 **TUI 路径**（`pnpm dsh --profile dsh-tui`），Agent 按预览做 **清理**。不要等网卡，也不要部署本地模型。不要把「没网就不能诊断」当成产品承诺。
 
-详见 [ADR-0001](adr/0001-software-only-usb-pack.md)、[ADR-0002](adr/0002-canonical-hackathon-scope.md)。
+详见 [ADR-0001](adr/0001-software-only-usb-pack.md)、[ADR-0002](adr/0002-canonical-hackathon-scope.md)、[ADR-0003](adr/0003-dsh-tui-agent-shell.md)。
 
 ---
 
@@ -44,7 +44,7 @@
 1. 插 U 盘（或打开仓库里的 `portable/`）。
 2. 无网或 DSH 没编好：跑 `portable\diagnose.cmd`，当场看到 C 盘空间、临时目录、近期错误、打印机。
 3. 跑 `portable\clean.cmd` **预览** 可回收量；说明桌面/文档/下载不会动。
-4. 有网且 DSH 能启动：`portable\start.cmd`，对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
+4. 有网且 DSH 能启动：`portable\start.cmd` 应拉起 **TUI 路径**（`dsh --profile dsh-tui`）。开发机可先 `cd dsh && pnpm dsh --profile dsh-tui`。对 Agent 说「C 盘满了，帮我看看」；Agent 读 `CONTEXT.md` 和 skill `only-u-ops`，复述预览，**等人确认才 -Execute**。
 5. 讲稿收束：即插即用、普通人不用装 Agent、安全清理。无线网卡是下一阶段。
 
 ---
@@ -82,7 +82,7 @@ Only-U/
 | 便携启动 | `portable/start.cmd`、DSH_HOME 在 U 盘、读 `.env` | AFK |
 | 离线诊断 | `diagnose.cmd`：磁盘/内存/临时目录/事件日志/打印机，只读 | AFK |
 | 安全清理 | `clean.cmd`：预览默认；`-Execute` 只清白名单临时目录 | AFK / 须人确认演示 |
-| DSH 接线 | skill 或 Cordis **插件** 让 Agent 去跑上述脚本 | AFK |
+| DSH 接线 | **TUI 路径**（dsh-TUI）+ skill，让 Agent 去跑上述脚本 | AFK |
 | 演示机 + 讲稿 | 人为堆高 `%TEMP%`，3 分钟词 | HITL |
 
 第四人若不能到场、赛规可能算远程作弊，交付不要绑在他身上。
@@ -106,7 +106,7 @@ Only-U/
 1. 三人读完本文 + `CONTEXT.md` + ADR-0001，口头确认演示词。
 2. `/to-issues` 把第 5 节五张切片发到 GitHub（无线网卡不要开票）。
 3. 按票实现；先保证离线 **诊断** / **清理** 预览在任意 Win 机双击能跑。
-4. 再接 DSH headless；接不上就现场只演示脚本，讲「Agent 层用同一套脚本」。
+4. 再接 **TUI 路径**（dsh-TUI）。接不上就现场只演示脚本，讲「Agent 层用同一套脚本」。TUI 内不要用 `/update`（会找全局 `dsh.cmd`）。
 5. 赛后再单独立项 **无线网卡路径**。
 
 ---

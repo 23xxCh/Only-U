@@ -3,8 +3,8 @@
 - 来源：gstack `/office-hours`（Builder）
 - 状态：**已批准**（队长，2026-08-22）
 - 仓库：https://github.com/23xxCh/Only-U
-- 方案：**Approach B — 脚本地板 + DSH 调同一套脚本**
-- 基线：本文件 + [`docs/plan.md`](../plan.md) + [ADR-0001](../adr/0001-software-only-usb-pack.md) + [ADR-0002](../adr/0002-canonical-hackathon-scope.md)
+- 方案：**Approach B — 脚本地板 + TUI 调同一套脚本**
+- 基线：本文件 + [`docs/plan.md`](../plan.md) + [ADR-0001](../adr/0001-software-only-usb-pack.md) + [ADR-0002](../adr/0002-canonical-hackathon-scope.md) + [ADR-0003](../adr/0003-dsh-tui-agent-shell.md)
 
 gstack 只在本机当设计工作流，**不要**把 gstack 源码 vendor 进仓库。
 
@@ -14,7 +14,7 @@ gstack 只在本机当设计工作流，**不要**把 gstack 源码 vendor 进�
 
 ## Whoa
 
-插上，双击，诊断报告出来。这台电脑上没有安装步骤。清理永远先预览。有网才让 Agent 用自然语言走同一套脚本。
+插上，双击，诊断报告出来。这台电脑上没有安装步骤。清理永远先预览。有网才打开 **TUI 路径**（dsh-TUI），用自然语言走同一套脚本。
 
 ## Constraints
 
@@ -34,17 +34,17 @@ gstack 只在本机当设计工作流，**不要**把 gstack 源码 vendor 进�
 | 方案 | 内容 | 本场 |
 |---|---|---|
 | A 脚本即产品 | 只演 diagnose/clean，Agent 只在讲稿 | 保底 |
-| **B 脚本地板 + DSH 调同一脚本** | 双击诊断；有网 `start.cmd` 让 Agent 调同一套 ps1，确认后才 `-Execute`；失败退回 A | **已选** |
-| C 极简 TUI / 本地 Web 作为唯一入口 | 新界面 | 本场不做 |
+| **B 脚本地板 + TUI 调同一脚本** | 双击诊断；有网 `dsh --profile dsh-tui`（`start.cmd` 包装它）调同一套 ps1，确认后才 `-Execute`；失败退回 A | **已选** |
+| C TUI / 本地 Web 作为无网唯一入口 | 没编过 DSH 就演不了 | 本场不做 |
 
-B 的地板等于 A，上限才是 Agent，清理逻辑不写两份。
+B 的地板等于 A。有网壳是 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI)，不是 headless，也不是长 PRD 的 Web。清理逻辑不写两份。
 
 ## Demo（3 分钟）
 
 1. 插盘或打开 `portable\`
 2. `diagnose.cmd`：磁盘、临时目录、系统错误、打印机
 3. `clean.cmd` 预览（不删桌面/文档/下载）
-4. 有网：`start.cmd`，Agent 读 `CONTEXT.md` + skill `only-u-ops`，只调现有脚本
+4. 有网：`cd dsh && pnpm dsh --profile dsh-tui`（交付用 `start.cmd` 包装同一 profile）。Agent 读 `CONTEXT.md` + skill `only-u-ops`，只调现有脚本
 5. 收束：即插即用、不敢乱删。无线网卡是下一阶段
 
 ## Success
@@ -62,7 +62,7 @@ U 盘拷贝仓库 `portable/`，可选已 build 的 `dsh/`。本场不发 npm / 
 
 - 无线网卡、流量卡、PE、重装、BIOS
 - 无网时禁止跑诊断（这是队友长 PRD 的条款，本场不采用）
-- 以本地 Web UI 当唯一入口
+- 以本地 Web UI 或 TUI 当无网唯一入口
 - 41 条 FR 全量产品、完整动作目录/回退/快照平台
 - 把 Codex / CC Switch 做成终端用户依赖
 - 后门、凭据窃取、攻击扫描、自媒体自动化
@@ -70,6 +70,6 @@ U 盘拷贝仓库 `portable/`，可选已 build 的 `dsh/`。本场不发 npm / 
 ## Open questions
 
 - 现场 DeepSeek / AI Ping key 用主办方还是自带
-- `pnpm dsh --profile headless` 在演示机能否在 10 分钟内起来
+- 演示机烘焙后 `dsh --profile dsh-tui` 能否在 10 分钟内起来（不要用 TUI 的 `/update`）
 
 有网加分路径可以接 AI Ping，但不把「没网就不能诊断」写进产品承诺。

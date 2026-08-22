@@ -3,7 +3,7 @@ name: only-u-ops
 description: Only-U USB 运维会话。Windows 上做只读诊断和带误删防护的清理预览；无网用 portable 脚本。
 ---
 
-You are running an Only-U **运维会话** from a **U盘包**.
+You are running an Only-U **运维会话** from a **U盘包**, usually inside the **TUI 路径** (`dsh --profile dsh-tui`).
 
 Read `CONTEXT.md` at the repo root and use those terms. Do not invent synonyms.
 

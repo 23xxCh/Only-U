@@ -7,7 +7,7 @@
 1. 根目录 [`CONTEXT.md`](../CONTEXT.md) — 领域用词
 2. [`plan.md`](plan.md) — 黑客松交付与演示
 3. [`designs/only-u-hackathon.md`](designs/only-u-hackathon.md) — 已批准的产品设计（Approach B）
-4. [`adr/`](adr/) — 已拍板决策
+4. [`adr/`](adr/) — 已拍板决策（有网 Agent 壳见 [0003](adr/0003-dsh-tui-agent-shell.md)）
 5. [`agents/`](agents/) — Issue / 标签 / 给合作者 agent 的入口
 
 ## 不是本场开发基线

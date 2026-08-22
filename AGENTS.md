@@ -12,8 +12,10 @@ U盘运维 agent，基于 [DeepSeek Harness](https://github.com/deepseek-ai/deep
 cd dsh
 pnpm install
 pnpm run build
-pnpm dsh --profile headless "这台电脑 C 盘满了，帮我看看"
+pnpm dsh --profile dsh-tui
 ```
+
+有网 Agent 壳是 **TUI 路径**（[ADR-0003](docs/adr/0003-dsh-tui-agent-shell.md)）：插件 `@deepseek-harness-tui/dsh-tui`，profile 名 `dsh-tui`。不要 fork `dsh/`，不要把 dsh-TUI 源码 vendor 进仓库，不要用 `github:deepseek-harness/turtle-ui`。升级用 `pnpm dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@版本`，不要用 TUI 里的 `/update`。
 
 无网或 DSH 未构建时，直接跑 `portable\diagnose.cmd`。U盘能力用 skill / 插件，不要改 harness 内核。
 

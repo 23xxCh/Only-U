@@ -5,7 +5,7 @@
 - 仓库：https://github.com/23xxCh/Only-U
 - Issue：https://github.com/23xxCh/Only-U/issues/1
 - 协作说明：`docs/发给合作者-如何让他们的agent干活.md`
-- 本场基线：`docs/plan.md`、`docs/designs/only-u-hackathon.md`、ADR-0001、ADR-0002
+- 本场基线：`docs/plan.md`、`docs/designs/only-u-hackathon.md`、ADR-0001、ADR-0002、ADR-0003
 - **不要**按 `docs/Only-U-项目需求文档.md` 做 Web / 在线-only
 
 对方如果还没 clone，先让他做协作说明第 0 节。
@@ -32,10 +32,11 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
 5. CONTEXT.md
 6. docs/adr/0001-software-only-usb-pack.md
 7. docs/adr/0002-canonical-hackathon-scope.md
-8. docs/agents/issue-tracker.md
-9. docs/agents/triage-labels.md
-10. docs/agents/domain.md
-11. 当前文件：portable/start.cmd、portable/.env.example、.gitignore
+8. docs/adr/0003-dsh-tui-agent-shell.md
+9. docs/agents/issue-tracker.md
+10. docs/agents/triage-labels.md
+11. docs/agents/domain.md
+12. 当前文件：portable/start.cmd、portable/.env.example、.gitignore
 
 不要把 docs/Only-U-项目需求文档.md 或 docs/superpowers/specs/ 当实现规格。
 那是归档。本场是软件 U盘包：脚本地板 + DSH 调同一套脚本。不要做 Web UI、不要做「必须联网才能诊断」。
@@ -66,9 +67,9 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
 
 2. 如果存在 `portable\runtime\node\node.exe`，把它加到「当前 cmd 窗口」的 PATH 前面。不要改用户机器的系统 PATH。
 
-3. 启动命令不要再用 `pnpm dsh`（评委机没有 pnpm）。改成用盘上的 node.exe 跑：
-   `<仓库根>\dsh\apps\cli\lib\bin.js --profile headless <prompt>`
-   仓库根 = start.cmd 的上一级（现在 start.cmd 里 ROOT 已经是这样）。
+3. 启动命令不要再用 `pnpm dsh`，也不要用 `--profile headless`。评委机没有全局 pnpm。用盘上的 node.exe 跑：
+   `<仓库根>\dsh\apps\cli\lib\bin.js --profile dsh-tui`
+   仓库根 = start.cmd 的上一级。`DSH_HOME` 指到 `portable\.dsh-home`。烘焙时要把 dsh-tui profile 放到 `%DSH_HOME%\profiles\dsh-tui`（可从本机 `%USERPROFILE%\.dsh\profiles\dsh-tui` 拷）。不要调用 TUI 的 `/update`。
 
 4. 下面任一情况，立即失败退出（非 0），屏幕用中文人话说明原因，并告诉用户改跑 `portable\diagnose.cmd`：
    - 找不到 portable\runtime\node\node.exe
@@ -89,7 +90,7 @@ Issue：https://github.com/23xxCh/Only-U/issues/1
    - DEEPSEEK_BASE_URL= 用于 AI Ping（例如 https://aiping.cn/api/v1）
    - 真实 Key 只写在 U 盘 .env，永不进 Git
 
-headless 提示词保持 Only-U 运维会话：先读 CONTEXT.md 和 skill only-u-ops；做诊断；不要删除文件；给出可回收预览；无线网卡本次不做。可以沿用现有 start.cmd 里那段中文 prompt，不要改成 Web 产品。
+不要改成 Web 产品，不要 headless 一句退出。TUI 起来后由用户说话；skill only-u-ops 负责诊断/清理脚本。
 
 ====================
 不要做什么
@@ -97,7 +98,7 @@ headless 提示词保持 Only-U 运维会话：先读 CONTEXT.md 和 skill only-
 - 不要改 dsh/ 源码或 fork 内核
 - 不要改 portable/diagnose.ps1（那是 Issue #2）
 - 不要改 portable/clean.ps1
-- 不要做本地 Web UI、联网门禁产品、41 条 FR
+- 不要做本地 Web UI、联网门禁产品、41 条 FR；不要 `github:deepseek-harness/turtle-ui`
 - 不要提交 Node zip、node_modules、真实 .env
 - 不要 push --force 到 main
 

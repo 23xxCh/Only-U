@@ -9,7 +9,7 @@
 1. `CONTEXT.md`
 2. `docs/plan.md`
 3. `docs/designs/only-u-hackathon.md`（office-hours Approach B）
-4. `docs/adr/0001-software-only-usb-pack.md` 与本 ADR
+4. `docs/adr/0001-software-only-usb-pack.md`、本 ADR、以及后续的 `docs/adr/0003-dsh-tui-agent-shell.md`（有网壳）
 5. 已有 `portable/` 脚本与 `.dsh/skills/only-u-ops`
 
 ## 冲突条款：不采用
@@ -17,7 +17,7 @@
 | 长 PRD / 设计规格 | 本场方案 |
 |---|---|
 | V1 必须联网；无网只提示、禁止离线诊断 | **离线路径**必须能跑 `portable\diagnose.cmd` |
-| 本地 Web 界面是主入口 | CLI / 脚本是地板；Web 不是本场必做 |
+| 本地 Web 界面是主入口 | CLI / 脚本是地板；有网用 **TUI 路径**（ADR-0003），Web 不是本场必做 |
 | 场景 D 用来证明「不会跑离线脚本」 | 无网出诊断报告，才是 whoa |
 | P0 含完整性签名、动作目录、回退平台、41 条 FR | 本场只做诊断 + 带误删防护的清理 + 有网时 Agent 调同一脚本 |
 | 团队 Key 静态写入交付 U 盘作为产品形态 | 运行时读 `portable/.env`；真实 Key 永不进 Git。介质怎么带 key 是制作步骤，不是本场范围膨胀理由 |

@@ -32,6 +32,10 @@ _Avoid_: 工具, MCP
 无网时只跑本地脚本，不调用 LLM。
 _Avoid_: 本地模型
 
+**TUI 路径**:
+有网时的终端运维壳，profile 为 `dsh-tui`（[dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI)）。仍调用 portable 脚本。
+_Avoid_: Web 主入口, headless 一句退出, turtle-ui Git URL
+
 **无线网卡路径**:
 后续能力：用免驱 USB 网卡给无网机器上网。比赛期间不做。
 _Avoid_: 硬件套件（当前交付）
@@ -39,17 +43,18 @@ _Avoid_: 硬件套件（当前交付）
 ## Relationships
 
 - 一次 **运维会话** 使用一个 **U盘包**
-- **离线路径** 只做 **诊断**；有网后才把 **清理** 交给 Agent
+- **离线路径** 只做 **诊断**；有网走 **TUI 路径**，再把 **清理** 交给 Agent
 - **清理** 必须经过 **误删防护**，不得跳过预览
 - **无线网卡路径** 不在当前 **U盘包** 交付范围内
 
 ## Example dialogue
 
 > **Dev:** "没网的时候 Agent 怎么 **清理** C 盘？"
-> **Domain expert:** "没网走 **离线路径**，只跑 **诊断**。有网再让 Agent 按预览做 **清理**。不要上本地模型，也不要等无线网卡。"
+> **Domain expert:** "没网走 **离线路径**，只跑 **诊断**。有网走 **TUI 路径**，再让 Agent 按预览做 **清理**。不要上本地模型，也不要等无线网卡。"
 
 ## Flagged ambiguities
 
 - 「硬件」曾指自制 USB 网卡 + 流量卡。已决议：比赛只做软件 **U盘包**；**无线网卡路径** 赛后再做。
 - 「全自动」不是无人确认删文件。**清理** 一律预览 + 确认。
 - 长 PRD 把 V1 写成「必须联网、无网禁止诊断」。已决议：本场仍走 **离线路径**；见 `docs/adr/0002-canonical-hackathon-scope.md`。
+- 有网 Agent 壳是 **TUI 路径**，不是 headless、也不是 Web 主入口；见 `docs/adr/0003-dsh-tui-agent-shell.md`。
