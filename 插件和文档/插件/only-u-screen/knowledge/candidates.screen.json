@@ -1,0 +1,112 @@
+[
+  {
+    "id": "defectpx",
+    "name": "DefectPX",
+    "version": "待定",
+    "category": "屏幕检测",
+    "description": "屏幕坏点/纯色检测（GUI，全屏纯色循环）",
+    "risk": "只读显示类；GUI 由用户自行操作退出",
+    "exe": "tools\\defectpx\\DefectPX.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "全屏纯色循环检测坏点，内置 screen_deadpixel 脚本可部分覆盖，作备选",
+      "license": "MIT（6 star）",
+      "cliEvidence": "GUI；待实测启动行为"
+    }
+  },
+  {
+    "id": "twinkle-tray",
+    "name": "Twinkle Tray",
+    "version": "待定",
+    "category": "亮度调节",
+    "description": "显示器亮度调节（DDC/CI，托盘 GUI）",
+    "risk": "只读+亮度写 DDC/CI；GUI 由用户自行操作",
+    "exe": "tools\\twinkle-tray\\Twinkle Tray.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "外接显示器亮度调节（DDC/CI），PowerShell 不可达",
+      "license": "MIT（xanderfrangos/twinkle-tray，8.9k star，活跃）",
+      "cliEvidence": "GUI（托盘）；待实测启动行为"
+    }
+  },
+  {
+    "id": "monitorian",
+    "name": "Monitorian",
+    "version": "待定",
+    "category": "亮度调节",
+    "description": "多显示器亮度调节（托盘 GUI）",
+    "risk": "只读+亮度写 DDC/CI；GUI 由用户自行操作",
+    "exe": "tools\\monitorian\\Monitorian.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "多显示器亮度调节，与 Twinkle Tray 重叠，作备选",
+      "license": "MIT（emoacht/Monitorian，4.7k star）",
+      "cliEvidence": "GUI（托盘）；待实测启动行为"
+    }
+  },
+  {
+    "id": "lightbulb",
+    "name": "Lightbulb",
+    "version": "待定",
+    "category": "色温调节",
+    "description": "屏幕色温/防蓝光自动调节（GUI）",
+    "risk": "只读+色温调整；GUI 常驻",
+    "exe": "tools\\lightbulb\\Lightbulb.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "色温/防蓝光自动调节，PowerShell 不可达",
+      "license": "MIT（Tyrrrz/Lightbulb，2.8k star）；注意：README 含政治声明条款，收录前需评估舆论风险",
+      "cliEvidence": "GUI（常驻托盘）；待实测启动行为"
+    }
+  },
+  {
+    "id": "go-sct",
+    "name": "go-sct (sct)",
+    "version": "待定",
+    "category": "色温调节",
+    "description": "命令行色温调节（sct 6500 等参数直接生效）",
+    "risk": "只读+色温调整（不持久，重启恢复）",
+    "exe": "tools\\go-sct\\sct.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 60000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "命令行色温调节（可直接被模型调度），PowerShell 不可达",
+      "license": "MIT（d4l3k/go-sct，130 star）；注意：只分发 Windows 版 sct 二进制，勿连带 waysct 组件（其含 GPL-3 代码）",
+      "cliEvidence": "CLI：sct <色温> 直接生效；待实测固定 argTemplate 与退出码"
+    }
+  }
+]

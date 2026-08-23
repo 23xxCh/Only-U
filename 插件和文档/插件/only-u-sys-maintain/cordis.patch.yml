@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-sys-maintain
+      name: only-u-sys-maintain
+      config:
+        pollTimeoutMs: 10000

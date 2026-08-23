@@ -1,0 +1,134 @@
+[
+  {
+    "id": "autorunmanager",
+    "name": "AutoRunManager",
+    "version": "待定",
+    "category": "启动项管理",
+    "description": "启动项管理（CLI，注册表/计划任务枚举与禁用）",
+    "risk": "写注册表/计划任务（禁用/启用启动项）",
+    "exe": "tools\\autorunmanager\\AutoRunManager.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "启动项管理（枚举+禁用），PowerShell 可枚举但管理接口不可达",
+      "license": "MIT（22 star）",
+      "cliEvidence": "CLI；待实测枚举/禁用参数与退出码"
+    }
+  },
+  {
+    "id": "go-autoruns",
+    "name": "go-autoruns",
+    "version": "待定",
+    "category": "启动项清单",
+    "description": "启动项清单导出（CLI，只读枚举）",
+    "risk": "只读枚举",
+    "exe": "tools\\go-autoruns\\go-autoruns.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 120000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "启动项清单导出（只读），PowerShell 可达但覆盖不全，收录需论证增量价值",
+      "license": "MIT（64 star）",
+      "cliEvidence": "CLI；待实测导出参数与退出码"
+    }
+  },
+  {
+    "id": "vcredist",
+    "name": "vcredist",
+    "version": "待定",
+    "category": "运行库安装",
+    "description": "VC++ 运行库一键安装（/ai 静默模式）",
+    "risk": "写系统（安装运行库）",
+    "exe": "tools\\vcredist\\install.bat",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "全版本 VC++ 运行库静默安装（DirectX Repair 类能力的一部分），PowerShell 不可达",
+      "license": "Unlicense（abbodi1406/vcredist，8k star）",
+      "cliEvidence": "CLI：install.bat /ai 静默参数已文档化；待实测退出码"
+    }
+  },
+  {
+    "id": "ultimateredist",
+    "name": "UltimateRedist",
+    "version": "待定",
+    "category": "运行库安装",
+    "description": "运行库安装器（PowerShell + winget 编排）",
+    "risk": "写系统（安装运行库）；依赖联网 winget",
+    "exe": "tools\\ultimateredist\\UltimateRedist.ps1",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "运行库安装（winget 编排），与 vcredist 重叠，作备选",
+      "license": "MIT（5 star）",
+      "cliEvidence": "PowerShell 脚本（依赖联网 winget，离线不可用）；待实测"
+    }
+  },
+  {
+    "id": "filerecoverytool",
+    "name": "FileRecoveryTool",
+    "version": "待定",
+    "category": "文件恢复",
+    "description": "已删除文件恢复（GUI，误删找回）",
+    "risk": "恢复写盘（恢复文件写入目标位置）",
+    "exe": "tools\\filerecoverytool\\FileRecoveryTool.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "误删文件恢复（Recuva 类能力的宽松协议替代），PowerShell 不可达",
+      "license": "MIT（29 star）",
+      "cliEvidence": "GUI；待实测启动行为"
+    }
+  },
+  {
+    "id": "binwalk",
+    "name": "binwalk",
+    "version": "待定",
+    "category": "固件分析",
+    "description": "固件/镜像文件分析（CLI，提取嵌入文件）",
+    "risk": "只读分析（输出提取物到当前目录）",
+    "exe": "tools\\binwalk\\binwalk.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 120000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "固件/镜像文件分析，PowerShell 不可达",
+      "license": "MIT（ReFirmLabs/binwalk，14.3k star）；注意：Windows 支持受限，收录前实测",
+      "cliEvidence": "CLI；Windows 支持受限，待实测"
+    }
+  }
+]

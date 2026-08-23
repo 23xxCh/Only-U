@@ -1,0 +1,134 @@
+[
+  {
+    "id": "stressy",
+    "name": "stressy",
+    "version": "待定",
+    "category": "CPU 压测",
+    "description": "轻量 CPU 压测（-w 工作线程 / -t 时长，可自动化）",
+    "risk": "高负载压测：可能引起过热、降频甚至蓝屏",
+    "exe": "tools\\stressy\\stressy.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "CPU 压测，PowerShell 不可达",
+      "license": "MIT（活跃维护，2026-08 仍有提交）",
+      "cliEvidence": "CLI：-w/-t 参数已文档化；待实测固定 argTemplate 与退出码"
+    }
+  },
+  {
+    "id": "ferritest",
+    "name": "ferritest",
+    "version": "待定",
+    "category": "GPU 压测",
+    "description": "轻量 GPU 压测（-m/-d/-t 参数）",
+    "risk": "高负载压测：可能引起过热、降频甚至蓝屏；新项目无社区验证",
+    "exe": "tools\\ferritest\\ferritest.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "GPU 压测（FurMark 类能力的宽松协议替代），PowerShell 不可达",
+      "license": "MIT（2026-01 新建，0 star，无社区验证——实测前不入生效库）",
+      "cliEvidence": "CLI：-m/-d/-t 参数已文档化；待实测固定 argTemplate 与退出码"
+    }
+  },
+  {
+    "id": "mygpu",
+    "name": "MyGPU",
+    "version": "待定",
+    "category": "GPU 基准",
+    "description": "CUDA GPU 基准跑分",
+    "risk": "高负载基准；NVIDIA CUDA 限定",
+    "exe": "tools\\mygpu\\mygpu.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "GPU 基准跑分（NVIDIA CUDA 限定）",
+      "license": "MIT（9 star）",
+      "cliEvidence": "待实测：静默参数与退出码；NVIDIA-only"
+    }
+  },
+  {
+    "id": "memtest_vulkan",
+    "name": "memtest_vulkan",
+    "version": "待定",
+    "category": "显存压测",
+    "description": "Vulkan 显存测试（显存错误检测）",
+    "risk": "高负载压测；仅测显存（VRAM），不测系统内存",
+    "exe": "tools\\memtest_vulkan\\memtest_vulkan.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "显存错误检测，PowerShell 不可达",
+      "license": "zlib（GpuZelenograd/memtest_vulkan，827 star）",
+      "cliEvidence": "待实测：静默参数与退出码；需 Vulkan 驱动"
+    }
+  },
+  {
+    "id": "cpu-benchmark",
+    "name": "cpu-benchmark",
+    "version": "待定",
+    "category": "CPU 基准",
+    "description": "CPU 基准跑分（单核/多核）",
+    "risk": "高负载基准；依赖 Python 运行时",
+    "exe": "tools\\cpu-benchmark\\benchmark.py",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "CPU 基准跑分（SuperPi 类能力的宽松协议替代）",
+      "license": "MIT（6 star）",
+      "cliEvidence": "Python 脚本（依赖 Python 运行时，烤盘体积代价大）；待实测"
+    }
+  },
+  {
+    "id": "coremark",
+    "name": "CoreMark",
+    "version": "待定",
+    "category": "CPU 基准",
+    "description": "EEMBC 官方 CPU 基准（需自编译 exe）",
+    "risk": "高负载基准",
+    "exe": "tools\\coremark\\coremark.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "CPU 基准（行业标准 CoreMark 跑分）",
+      "license": "Apache-2.0（eembc/coremark）",
+      "cliEvidence": "需自编译 Windows exe，收录成本高；待实测"
+    }
+  }
+]

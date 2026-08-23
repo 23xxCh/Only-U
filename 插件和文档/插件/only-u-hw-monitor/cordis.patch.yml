@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-hw-monitor
+      name: only-u-hw-monitor
+      config:
+        pollTimeoutMs: 10000

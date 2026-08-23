@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-screen
+      name: only-u-screen
+      config:
+        pollTimeoutMs: 10000

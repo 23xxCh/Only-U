@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-system-repair
+      name: only-u-system-repair
+      config:
+        pollTimeoutMs: 10000

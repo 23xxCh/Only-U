@@ -1,0 +1,90 @@
+[
+  {
+    "id": "gping",
+    "name": "gping",
+    "version": "待定",
+    "category": "网络连通性",
+    "description": "图形化 ping（多目标实时延迟曲线，TUI）",
+    "risk": "只读流量；TUI 交互式，用户自行退出",
+    "exe": "tools\\gping\\gping.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "多目标延迟可视化，PowerShell 不可达",
+      "license": "MIT（orf/gping，12.6k star，活跃）",
+      "cliEvidence": "TUI 交互式；非交互参数待实测（可能无 -n 之类参数，仅启动 GUI）"
+    }
+  },
+  {
+    "id": "trippy",
+    "name": "Trippy",
+    "version": "待定",
+    "category": "路由追踪",
+    "description": "路由追踪（traceroute 的可视化替代，TUI）",
+    "risk": "只读流量；TUI 交互式，用户自行退出",
+    "exe": "tools\\trippy\\trip.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "路由追踪可视化，PowerShell 部分可达（tracert），收录需论证增量价值",
+      "license": "Apache-2.0（fujiapple852/trippy，7.5k star，活跃）",
+      "cliEvidence": "TUI 交互式；非交互参数待实测"
+    }
+  },
+  {
+    "id": "speedtest-go",
+    "name": "speedtest-go",
+    "version": "待定",
+    "category": "网络测速",
+    "description": "网速测试（--json 结构化导出）",
+    "risk": "只读流量；上传测试产生大流量",
+    "exe": "tools\\speedtest-go\\speedtest-go.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 120000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "网速测试结构化导出，PowerShell 不可达",
+      "license": "MIT（showwin/speedtest-go，825 star）",
+      "cliEvidence": "CLI：--json 导出；待实测固定 argTemplate 与退出码"
+    }
+  },
+  {
+    "id": "iperf3",
+    "name": "iperf3",
+    "version": "待定",
+    "category": "带宽测试",
+    "description": "局域网带宽压测（-c/-s 客户端/服务端模式）",
+    "risk": "大流量带宽压测（不写盘）；需对端运行 iperf3 服务端",
+    "exe": "tools\\iperf3\\iperf3.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "局域网带宽压测，PowerShell 不可达",
+      "license": "BSD-3-Clause（esnet/iperf，8.7k star）",
+      "cliEvidence": "CLI：-c/-s 参数已文档化；需对端 iperf3 服务端，待实测固定 argTemplate 与退出码"
+    }
+  }
+]

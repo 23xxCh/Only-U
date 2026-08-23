@@ -1,0 +1,90 @@
+[
+  {
+    "id": "kbt",
+    "name": "kbt",
+    "version": "待定",
+    "category": "键盘测试",
+    "description": "键盘测试（TUI，按键冲突/触发可视化）",
+    "risk": "只读外设监听；TUI 由用户自行操作退出",
+    "exe": "tools\\kbt\\kbt.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "键盘冲突/触发可视化测试，PowerShell 不可达",
+      "license": "MIT（bloznelis/kbt，391 star）",
+      "cliEvidence": "TUI；待实测启动行为"
+    }
+  },
+  {
+    "id": "mousetester",
+    "name": "MouseTester",
+    "version": "待定",
+    "category": "鼠标测试",
+    "description": "鼠标回报率/轨迹测试（GUI）",
+    "risk": "只读外设监听；GUI 由用户自行操作退出",
+    "exe": "tools\\mousetester\\MouseTester.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "鼠标回报率测试，PowerShell 不可达",
+      "license": "MIT（microe1/MouseTester，344 star）",
+      "cliEvidence": "GUI；待实测启动行为"
+    }
+  },
+  {
+    "id": "computester",
+    "name": "CompuTester",
+    "version": "待定",
+    "category": "电脑检测",
+    "description": "网页版电脑检测（离线 HTML，浏览器打开）",
+    "risk": "只读；HTML 静态页需浏览器打开（调度方式待实测）",
+    "exe": "tools\\computester\\index.html",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 600000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "轻量电脑检测（浏览器版），与 03 能力重叠，收录需论证增量价值",
+      "license": "MIT（2 star）",
+      "cliEvidence": "静态网页随包分发，需以 start 包装打开；待实测"
+    }
+  },
+  {
+    "id": "chipinfo",
+    "name": "ChipInfo",
+    "version": "待定",
+    "category": "存储芯片识别",
+    "description": "U盘主控芯片识别（Phison/SMI/Alcor 等，CLI）",
+    "risk": "只读查询",
+    "exe": "tools\\chipinfo\\chipinfo.py",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 60000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "U盘主控芯片识别（ChipGenius 类能力的宽松协议替代），PowerShell 不可达",
+      "license": "MIT（4 star；停更）；注意：Python 依赖，仅覆盖部分主控（Phison/SMI/Alcor）",
+      "cliEvidence": "Python CLI（依赖 Python 运行时）；待实测"
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "name": "only-u-diagnose-tools",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "files": ["index.js", "cordis.patch.yml", "lib", "knowledge", "tools"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

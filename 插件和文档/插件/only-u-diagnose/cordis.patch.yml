@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-diagnose
+      name: only-u-diagnose
+      config:
+        diagnoseTimeoutMs: 240000

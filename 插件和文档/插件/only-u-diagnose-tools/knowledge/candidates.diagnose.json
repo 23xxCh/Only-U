@@ -1,0 +1,90 @@
+[
+  {
+    "id": "systeminformer",
+    "name": "System Informer",
+    "version": "待定",
+    "category": "系统监控",
+    "description": "进程/服务/驱动/系统资源深度监控（原 Process Hacker）",
+    "risk": "只读信息查看类；谨慎使用其结束进程能力（v1 不调度写操作）",
+    "exe": "tools\\systeminformer\\SystemInformer.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "进程/驱动级深度监控，PowerShell 只能拿摘要",
+      "license": "MIT（winsiderss/systeminformer，15.7k star，活跃）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码"
+    }
+  },
+  {
+    "id": "diag",
+    "name": "Diag",
+    "version": "待定",
+    "category": "硬件检测",
+    "description": "便携式硬件检测（CPU/内存/磁盘/GPU/电池，支持导出报告）",
+    "risk": "只读信息导出",
+    "exe": "tools\\diag\\Diag.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "电池/GPU 细节报告，PowerShell 部分不可达",
+      "license": "MIT（MOSFET111/Diag）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码"
+    }
+  },
+  {
+    "id": "windowsdiagnostic",
+    "name": "WindowsDiagnostic",
+    "version": "待定",
+    "category": "系统诊断",
+    "description": "轻量级组件问题检测、启动项查看，单文件便携",
+    "risk": "只读信息查看",
+    "exe": "tools\\windowsdiagnostic\\WindowsDiagnostic.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "与内置诊断重叠度高，收录需论证增量价值",
+      "license": "MIT（LukeOnuke/WindowsDiagnostic）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码"
+    }
+  },
+  {
+    "id": "multidiagtoolkit",
+    "name": "MultiDiagToolkit",
+    "version": "待定",
+    "category": "综合诊断",
+    "description": "多合一系统诊断工具箱（Batchfile，面向新手）",
+    "risk": "只读信息查看",
+    "exe": "tools\\multidiagtoolkit\\MultiDiagToolkit.bat",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "与内置诊断重叠度高，收录需论证增量价值",
+      "license": "MIT（Jackstar1212/MultiDiagToolkit）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码"
+    }
+  }
+]

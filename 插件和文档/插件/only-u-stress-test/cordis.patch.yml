@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-stress-test
+      name: only-u-stress-test
+      config:
+        pollTimeoutMs: 10000

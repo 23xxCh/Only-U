@@ -1,0 +1,5 @@
+- insert:
+    - id: only-u-diagnose-tools
+      name: only-u-diagnose-tools
+      config:
+        pollTimeoutMs: 10000

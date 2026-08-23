@@ -1,0 +1,46 @@
+[
+  {
+    "id": "amazehealdisk",
+    "name": "AmazeHealDisk",
+    "version": "待定",
+    "category": "磁盘修复",
+    "description": "磁盘坏道检测与扇区刷新",
+    "risk": "扇区刷新是写盘操作，可能影响数据；只读扫描风险低",
+    "exe": "tools\\amazehealdisk\\AmazeHealDisk.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 900000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "坏道级磁盘检查，PowerShell（Get-PhysicalDisk）只能拿健康摘要，不可达",
+      "license": "MIT（随包分发保留 LICENSE）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码（仓库：Adiru3/AmazeHealDisk）"
+    }
+  },
+  {
+    "id": "crystaldiskinfo",
+    "name": "CrystalDiskInfo",
+    "version": "待定",
+    "category": "磁盘健康检测",
+    "description": "SMART 健康/温度/接口详情查看（GUI，只读）",
+    "risk": "只读 SMART 查询",
+    "exe": "tools\\crystaldiskinfo\\DiskInfo64.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 300000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "SMART 属性/温度/接口详情，PowerShell（Get-PhysicalDisk）只能拿健康摘要，不可达",
+      "license": "MIT（hiyohiyo/CrystalDiskInfo，793 star；仓库无 LICENSE 文件，仅官网许可页声明 MIT，收录时需下载留存许可页证据）",
+      "cliEvidence": "有 /CopyExit 启动复制模式等有限参数；结构化报告导出待实测"
+    }
+  }
+]

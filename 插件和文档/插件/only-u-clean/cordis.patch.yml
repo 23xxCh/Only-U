@@ -1,0 +1,6 @@
+- insert:
+    - id: only-u-clean
+      name: only-u-clean
+      config:
+        cleanPreviewTimeoutMs: 240000
+        cleanExecuteTimeoutMs: 600000

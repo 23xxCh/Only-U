@@ -1,0 +1,90 @@
+[
+  {
+    "id": "fastfetch",
+    "name": "fastfetch",
+    "version": "待定",
+    "category": "综合硬件信息",
+    "description": "一站式硬件/系统信息（CPU/GPU/主板/内存/显示器，支持 JSON 导出）",
+    "risk": "只读信息导出",
+    "exe": "tools\\fastfetch\\fastfetch.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 60000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "综合硬件清单 JSON 导出，覆盖 WMI 拿不全的细节",
+      "license": "MIT（fastfetch-cli/fastfetch，24.3k star，活跃）",
+      "cliEvidence": "CLI：--format json 导出结构化清单；待实测固定 argTemplate 与退出码"
+    }
+  },
+  {
+    "id": "windowshardwareinfo",
+    "name": "WindowsHardwareInfo",
+    "version": "待定",
+    "category": "硬件清单",
+    "description": "便携式 Windows 硬件信息导出（单文件）",
+    "risk": "只读信息导出",
+    "exe": "tools\\windowshardwareinfo\\WindowsHardwareInfo.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 60000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "硬件清单文本导出，与 fastfetch 能力重叠，作备选",
+      "license": "MIT（141 star）",
+      "cliEvidence": "CLI 可重定向输出；待实测参数与退出码"
+    }
+  },
+  {
+    "id": "nwinfo",
+    "name": "nwinfo",
+    "version": "待定",
+    "category": "硬件信息",
+    "description": "硬件信息命令行工具（--net/--pci 等分域导出）",
+    "risk": "只读信息导出",
+    "exe": "tools\\nwinfo\\nwinfo.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 60000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "分域硬件信息导出（网络/PCI 等），与 fastfetch 互补",
+      "license": "Unlicense（ncruces/nwinfo，676 star）",
+      "cliEvidence": "CLI：--net 等分域导出；待实测参数与退出码"
+    }
+  },
+  {
+    "id": "intelpcm",
+    "name": "Intel PCM",
+    "version": "待定",
+    "category": "CPU 监测",
+    "description": "Intel CPU 温度/功耗/内存带宽计数器（-csv 静默导出）",
+    "risk": "只读采样；需管理员并加载自带 MSR 内核驱动",
+    "exe": "tools\\intelpcm\\pcm.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": { "0": "ok" },
+    "timeoutMs": 120000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "Intel CPU 温度/功耗/带宽计数器，PowerShell 不可达（AMD 不在覆盖内）",
+      "license": "BSD-3-Clause（intel/pcm，3.3k star）",
+      "cliEvidence": "CLI：pcm.exe -csv 静默导出；需实测驱动加载与退出码（Intel CPU 限定）"
+    }
+  }
+]
