@@ -5,6 +5,7 @@
   诊断.cmd        没网也能用。看 C 盘、临时目录、近期错误、打印机。
   清理预览.cmd    只预览可回收量，不删除。确认后再运行 portable\clean.cmd -Execute。
   启动Agent.cmd   有网才用。打开 TUI，对它说「C 盘满了，帮我看看」。
+  清空维修记录.cmd  借盘/卖盘前用。Y=只清客户对话（留维修记录）；A=连记录一起清。
 
 TUI 里的常用入口
 
@@ -18,6 +19,7 @@ TUI 里的常用入口
                   拼音别名：/kongjian
   /preset only-u-repair   切维修模式（只挂 PowerShell 与 Only-U 工具）。
   /preset standard        切回标准模式（默认）。
+  留档                    对 agent 说「留档」：报告进 portable\reports\，台账追加 portable\history-<机器名>.md。
 
 换自己的模型（三十秒）
 
