@@ -1,0 +1,76 @@
+[
+  {
+    "id": "windowsmedicator",
+    "name": "WindowsMedicator",
+    "version": "待定",
+    "category": "系统修复",
+    "description": "Windows 系统镜像修复、损坏文件验证",
+    "risk": "系统级写操作，需逐项确认",
+    "exe": "tools\\windowsmedicator\\WindowsMedicator.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": {
+      "0": "ok"
+    },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "镜像修复，PowerShell 的 DISM 可部分覆盖，收录需论证增量价值",
+      "license": "MIT（随包分发保留 LICENSE）",
+      "cliEvidence": "待实测：静默参数、报告导出与退出码（仓库：shervinbdndev/WindowsMedicator）"
+    }
+  },
+  {
+    "id": "kudu",
+    "name": "Kudu",
+    "version": "待定",
+    "category": "系统清理套件",
+    "description": "注册表清理、启动项管理、debloat（GUI，可撤销+备份）",
+    "risk": "写注册表/系统；清理前建议备份",
+    "exe": "tools\\kudu\\Kudu.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": {
+      "0": "ok"
+    },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "注册表清理/debloat（BleachBit 类能力的宽松协议替代），PowerShell 不可达",
+      "license": "MIT（sndrke/Kudu，2.2k star，2026-08 活跃）",
+      "cliEvidence": "README 提及 scriptable CLI 模式，具体参数待实测"
+    }
+  },
+  {
+    "id": "crapfixer",
+    "name": "CrapFixer",
+    "version": "待定",
+    "category": "系统修复",
+    "description": "常见系统问题一键修复（GUI，可撤销+自动备份）",
+    "risk": "系统级写操作，需逐项确认",
+    "exe": "tools\\crapfixer\\CrapFixer.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": {
+      "0": "ok"
+    },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "常见系统问题修复（可撤销+自动备份），PowerShell 不可达",
+      "license": "MIT（2.4k star）",
+      "cliEvidence": "GUI-only（WinForms）；待实测启动行为"
+    },
+    "rejected": true,
+    "rejectedReason": "GUI-only：无 headless CLI，违反 ADR-0007 第 3 条（2026-08-23 评审）；如需启用须找到官方 CLI 通道并重审"
+  }
+]
