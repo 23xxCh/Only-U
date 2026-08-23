@@ -169,6 +169,26 @@ if (Test-Path $repoPresets) {
   }
 }
 
+# settings.yaml 注释模板：只在不存在时写入（/provider 向导会把真实配置写进这里，绝不覆盖）
+$settingsYaml = Join-Path $runtimeDsh 'settings.yaml'
+if (-not (Test-Path $settingsYaml)) {
+  $template = @'
+# Only-U 设置文件（改完即生效，热重载）。
+#
+# 换默认模型（跨电脑生效；日常切换直接用 TUI 里的 /provider 更方便）：
+# agent-default-model:
+#   provider: my-route        # /provider 向导里起的 route 名
+#   model: glm-4.7            # 该 provider 下的模型 id
+#
+# DeepSeek 官方线路微调（一般不用动）：
+# llm-deepseek:
+#   baseURL: https://api.deepseek.com
+#   thinking: enabled
+'@
+  [IO.File]::WriteAllText($settingsYaml, ($template -replace "`r`n", "`n"), [Text.UTF8Encoding]::new($false))
+  Write-Host '   预置 settings.yaml 注释模板'
+}
+
 Write-Host "== 6. start.cmd + 盘根入口"
 # start.cmd 唯一源 = 仓库 portable\start.cmd（GBK 无 BOM、含 #27 单实例锁），不再维护内联副本
 $gbk = [Text.Encoding]::GetEncoding(936)

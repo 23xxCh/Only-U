@@ -11,11 +11,26 @@ TUI 里的常用入口
   直接说话        agent 会自己动手跑命令（PowerShell 工具已挂载）。
   !命令           !ipconfig —— 本地跑命令，结果只给你看，不给 agent。
   !!命令          !!ipconfig —— 同上，结果还会发给 agent 接着分析。
+  /chajian        看装了哪些插件、有哪些命令和模型工具。
   /diagnose       跑完整诊断，报告存 portable\logs\diagnose-*.txt。
   /clean          清理预览（只算可回收空间，不删除），确认后运行。
-  /space /空间    全屏看 CPU/内存/磁盘/GPU 色块面板（r 刷新，Esc 退出）。
+  /space          全屏看 CPU/内存/磁盘/GPU 色块面板（r 刷新，Esc 退出）。
+                  拼音别名：/kongjian
   /preset only-u-repair   切维修模式（只挂 PowerShell 与 Only-U 工具）。
   /preset standard        切回标准模式（默认）。
+
+换自己的模型（三十秒）
+
+  在 TUI 里输入 /provider → 自定义 → 贴 API 地址和 Key → 自动发现模型 →
+  立即切换。凭据保存在 U 盘上，换电脑也在。
+
+  常见地址（都是 OpenAI 兼容）：
+    智谱   https://open.bigmodel.cn/api/paas/v4
+    Kimi   https://api.moonshot.cn/v1
+    通义   https://dashscope.aliyuncs.com/compatible-mode/v1
+    本地   http://127.0.0.1:8000/v1   （vLLM/Ollama 等）
+
+  提示：第三方模型如果不支持深度思考，输入 /effort 把思考调到 off。
 
 注意
 

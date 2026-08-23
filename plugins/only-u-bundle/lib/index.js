@@ -154,17 +154,48 @@ export function apply(ctx) {
     handler: spaceHandler,
   })
   ctx.effect(() => () => disposeSpace())
-  // 中文别名 /空间：注册失败（命名校验拒绝）就静默放弃，/space 仍可用
-  try {
-    const disposeSpaceCn = commands.register({
-      name: '空间',
-      description: '全屏查看电脑状态（CPU/内存/磁盘/GPU 色块面板）',
-      handler: spaceHandler,
-    })
-    ctx.effect(() => () => disposeSpaceCn())
-  } catch {
-    // ignore: /space 已注册
-  }
+  // 拼音别名（命令名只允许 ^[a-z][a-z0-9_-]*$，中文注册会被静默拒绝——实测）
+  const disposeKongjian = commands.register({
+    name: 'kongjian',
+    description: '全屏查看电脑状态（/space 的拼音别名）',
+    handler: spaceHandler,
+  })
+  ctx.effect(() => () => disposeKongjian())
 
-  ctx.logger?.info('[only-u-bundle] registered: /diagnose /clean /space')
+  // /chajian：给使用者看的插件/命令/模型工具清单（#46）
+  // 名称只能 ASCII（dsh-commands 正则），中文入口写进先读我时用 /chajian
+  const disposeChajian = commands.register({
+    name: 'chajian',
+    description: '查看已装插件、可用命令和模型工具的清单',
+    handler: (invocation) => {
+      const lines = []
+      try {
+        const entries = [...ctx.loader.entries()]
+          .filter((e) => (e.options?.name ?? '').startsWith('only-u-') || (e.options?.name ?? '').includes('only-u'))
+          .map((e) => e.options?.name ?? e.options?.id ?? '?')
+        lines.push('【插件】' + (entries.length ? entries.join('、') : '无'))
+      } catch {
+        lines.push('【插件】读取失败')
+      }
+      try {
+        const cmds = ctx.get('commands').list(invocation.agent)
+        lines.push('【命令】' + cmds.map((c) => `/${c.name}`).join(' '))
+      } catch {
+        lines.push('【命令】读取失败')
+      }
+      try {
+        const tools = ctx.get('tools').schemas(invocation.agent)
+        const ours = tools.filter((t) => /^(ops_|diag_|mon_|net_|peri_|screen_|stress_|maint_|sys_|dbench_|disk_|clean)/.test(t.name))
+        lines.push(`【模型工具】共 ${tools.length} 个，其中 Only-U ${ours.length} 个：`)
+        for (const t of ours) lines.push(`  ${t.name} —— ${String(t.description ?? '').split('\n')[0].slice(0, 40)}`)
+      } catch {
+        lines.push('【模型工具】读取失败')
+      }
+      lines.push('【换模型】输入 /provider 三十秒接入第三方模型；/preset 切换维修模式')
+      return { kind: 'success', text: lines.join('\n') }
+    },
+  })
+  ctx.effect(() => () => disposeChajian())
+
+  ctx.logger?.info('[only-u-bundle] registered: /diagnose /clean /space /kongjian /chajian')
 }
