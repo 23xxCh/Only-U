@@ -17,6 +17,10 @@ build/
 wxcontext/
 token路由监控/
 portable/.env
+portable/.dsh-home/
+portable/reports/
+portable/logs/
+portable/history-*.md
 grok-last-copy.txt
 last-copy.txt
 portable/runtime/

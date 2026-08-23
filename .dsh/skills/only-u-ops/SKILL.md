@@ -23,10 +23,23 @@ Read `CONTEXT.md` at the repo root and use those terms. Do not invent synonyms.
 - 手动命令模式：`!命令` 本地执行只给人看；`!!命令` 结果同时发给你继续分析。
 - preset：`/preset only-u-repair` 切维修模式，`/preset standard` 切回默认。
 
+## 维修报告（双版输出）
+
+诊断 + 清理预览展示完后，按 `.dsh/skills/only-u-ops/REPORT-FORMAT.md` 的结构复述报告：先输出师傅技术版（红灯区置顶，各小节「结论→证据→建议」，术语保留、数值带单位），报告末尾附主人白话版（3-5 句白话，必含「没有删除您的任何个人文件」；执行过清理则写明回收空间与删除类型）。
+
+师傅要求「留档」时，运行 `portable\save-report.cmd`（会重新跑一遍 diagnose，约 30-60 秒），完成后把生成的 `portable\reports\report-<机器名>-<时间>.txt` 路径告诉师傅。报告只写 U 盘，不联网。save-report 落盘的是原始数据加白话版占位段，白话版由你在 TUI 里生成后让师傅粘贴进去。
+
+## 维修记录（一机一会话，客户隐私不出盘）
+
+- **一机一会话**：每台客户机开新会话，不引用别的机器的旧会话内容。
+- 师傅问「上次修了什么」→ 列 `portable\reports\` 里文件名含该机器名的报告（命名 `report-<机器名>-<yyyyMMdd-HHmmss>.txt`，机器名即客户机的 `COMPUTERNAME`），让师傅自己看文件；不要复述其他机器的报告内容。
+- 师傅要清盘（借盘/卖盘前）→ 指引双击盘根 `清空维修记录.cmd`。它只清 `portable\reports\`、`portable\logs\` 和 DSH 会话目录，`portable\.env`（API Key）与程序不受影响。
+
 ## Tools
 
 - Diagnose: `portable/diagnose.ps1`
 - Clean preview: `portable/clean.ps1`
 - Clean execute: `portable/clean.ps1 -Execute`
+- Save repair report: `portable/save-report.cmd`
 
 If the TUI cannot start, those scripts still work. Do not modify files under `dsh-tui/` to complete this task.

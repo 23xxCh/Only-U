@@ -145,10 +145,14 @@ $profDst = Join-Path $runtimeDsh 'profiles\dsh-tui'
 New-Item -ItemType Directory -Path $profDst -Force | Out-Null
 cmd /c "robocopy `"$profSrc`" `"$profDst`" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP"
 if ($LASTEXITCODE -ge 8) { throw "robocopy profile failed: $LASTEXITCODE" }
-$skillSrc = Join-Path $Repo '.dsh\skills\only-u-ops\SKILL.md'
+$skillSrcDir = Join-Path $Repo '.dsh\skills\only-u-ops'
 $skillDst = Join-Path $runtimeDsh 'skills\only-u-ops'
 New-Item -ItemType Directory -Path $skillDst -Force | Out-Null
-Copy-Item -LiteralPath $skillSrc -Destination (Join-Path $skillDst 'SKILL.md') -Force
+Copy-Item -LiteralPath (Join-Path $skillSrcDir 'SKILL.md') -Destination (Join-Path $skillDst 'SKILL.md') -Force
+$reportFormat = Join-Path $skillSrcDir 'REPORT-FORMAT.md'
+if (Test-Path -LiteralPath $reportFormat) {
+  Copy-Item -LiteralPath $reportFormat -Destination (Join-Path $skillDst 'REPORT-FORMAT.md') -Force
+}
 
 $envSrc = Join-Path $Repo 'portable\.env'
 $envDst = Join-Path $Dest 'portable\.env'
@@ -209,6 +213,8 @@ Write-Launcher '诊断.cmd' $wrapDiag
 Write-Launcher '清理预览.cmd' $wrapClean
 Write-Launcher '启动Agent.cmd' $wrap
 Write-Launcher 'Start-Agent.cmd' $wrap
+$wrapWipe = "@echo off`r`nsetlocal`r`ncd /d `"%~dp0`"`r`nwhere pwsh >nul 2>&1`r`nif %ERRORLEVEL%==0 (`r`n  pwsh -NoProfile -ExecutionPolicy Bypass -File `"%~dp0portable\wipe-records.ps1`" %*`r`n) else (`r`n  powershell -NoProfile -ExecutionPolicy Bypass -File `"%~dp0portable\wipe-records.ps1`" %*`r`n)`r`nset `"WIPE_EXIT=%ERRORLEVEL%`"`r`nif not `"%WIPE_EXIT%`"==`"0`" (`r`n  echo.`r`n  pause`r`n)`r`nexit /b %WIPE_EXIT%`r`n"
+Write-Launcher '清空维修记录.cmd' $wrapWipe
 
 $nodeOut = Join-Path $runtimeNode 'node.exe'
 $binOut = Join-Path $runtimeDsh 'lib\bin.js'
