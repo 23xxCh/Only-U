@@ -1,0 +1,8 @@
+- insert:
+    - id: only-u-agent-junk
+      name: only-u-agent-junk
+      config:
+        scanTimeoutMs: 240000
+        cleanPreviewTimeoutMs: 240000
+        cleanExecuteTimeoutMs: 900000
+        migrateTimeoutMs: 1800000

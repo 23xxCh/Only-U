@@ -1,0 +1,794 @@
+[
+  {
+    "id": "codex-sessions",
+    "name": "OpenAI Codex 会话历史",
+    "paths": [
+      "%USERPROFILE%\\.codex\\sessions",
+      "%USERPROFILE%\\.codex\\archived_sessions",
+      "%USERPROFILE%\\.codex\\session_index.jsonl"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "头号膨胀源：社区单任务 731GB、computer-use 截图 165GB。删除不可恢复（丢 codex resume），只可 junction 迁移。"
+  },
+  {
+    "id": "codex-config-auth",
+    "name": "OpenAI Codex 配置与登录态",
+    "paths": [
+      "%USERPROFILE%\\.codex\\config.toml",
+      "%USERPROFILE%\\.codex\\auth.json"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "必留。删了要重新登录、重配 provider/模型/信任级别。"
+  },
+  {
+    "id": "codex-tmp",
+    "name": "OpenAI Codex 插件暂存",
+    "paths": [
+      "%USERPROFILE%\\.codex\\.tmp",
+      "%USERPROFILE%\\.codex\\tmp"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "插件暂存、市场捆绑包；自动重建。"
+  },
+  {
+    "id": "codex-plugins-cache",
+    "name": "OpenAI Codex 插件缓存",
+    "paths": [
+      "%USERPROFILE%\\.codex\\plugins"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "插件安装与缓存（.plugin-appserver、cache\\openai-*）；删除后重下。"
+  },
+  {
+    "id": "codex-sandbox-bin",
+    "name": "OpenAI Codex 沙箱辅助二进制",
+    "paths": [
+      "%USERPROFILE%\\.codex\\.sandbox-bin"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "codex.exe 副本类辅助二进制；自动重建。"
+  },
+  {
+    "id": "codex-logs-sqlite",
+    "name": "OpenAI Codex SQLite 事件日志",
+    "paths": [
+      "%USERPROFILE%\\.codex\\logs_2.sqlite",
+      "%USERPROFILE%\\.codex\\logs_2.sqlite-wal",
+      "%USERPROFILE%\\.codex\\logs_2.sqlite-shm",
+      "%USERPROFILE%\\.codex\\log",
+      "%USERPROFILE%\\.codex\\sandbox.log",
+      "%USERPROFILE%\\.codex\\sandbox.2026-05-31.log",
+      "%USERPROFILE%\\.codex\\sandbox.2026-07-28.log",
+      "%USERPROFILE%\\.codex\\sandbox.2026-08-22.log"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "删除前先退出 codex（WAL 被挂起进程锁住时删了也不释放空间）。社区案例 WAL 数百 GB。"
+  },
+  {
+    "id": "codex-cache",
+    "name": "OpenAI Codex 远程插件缓存",
+    "paths": [
+      "%USERPROFILE%\\.codex\\cache",
+      "%USERPROFILE%\\.codex\\generated_images",
+      "%USERPROFILE%\\.codex\\attachments"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "远程插件目录缓存、生成图片与附件残留。"
+  },
+  {
+    "id": "codex-runtime-install-tmp",
+    "name": "OpenAI Codex 运行时安装暂存",
+    "paths": [
+      "%USERPROFILE%\\.cache\\codex-runtimes\\codex-runtime-install-*"
+    ],
+    "bloatSource": "updater",
+    "tier": "green",
+    "action": "clean",
+    "notes": "codex-runtime-install-* 安装暂存残留（本机实测 114.6MB）；纯浪费，直接删。"
+  },
+  {
+    "id": "codex-runtimes-deps",
+    "name": "OpenAI Codex 沙箱运行时",
+    "paths": [
+      "%USERPROFILE%\\.cache\\codex-runtimes"
+    ],
+    "bloatSource": "cache",
+    "tier": "yellow",
+    "action": "migrate",
+    "notes": "native/node/python 沙箱运行时（本机 1.33GB）。删了会重新下载，建议 junction 搬走。注意：官方文档未明确该缓存随 CODEX_HOME 走，须单独 junction。"
+  },
+  {
+    "id": "claude-sessions",
+    "name": "Claude Code 会话记录",
+    "paths": [
+      "%USERPROFILE%\\.claude\\projects",
+      "%USERPROFILE%\\.claude\\file-history",
+      "%USERPROFILE%\\.claude\\transcripts"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "每轮对话+工具调用明文 JSONL。删除丢 /resume 能力且不可逆；只可迁移。cleanupPeriodDays（默认 30 天）到期自动清。"
+  },
+  {
+    "id": "claude-config-auth",
+    "name": "Claude Code 配置与登录态",
+    "paths": [
+      "%USERPROFILE%\\.claude\\settings.json",
+      "%USERPROFILE%\\.claude\\credentials",
+      "%USERPROFILE%\\.claude.json"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "必留。settings.json / credentials / .claude.json 删了要重新登录、重配 MCP 与权限。"
+  },
+  {
+    "id": "claude-skills-plugins",
+    "name": "Claude Code 技能与插件",
+    "paths": [
+      "%USERPROFILE%\\.claude\\skills",
+      "%USERPROFILE%\\.claude\\plugins"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "skills 是用户手动安装的资产（调研机 1.28GB，非垃圾）；plugins 谨慎（含用户装的插件）。确认不再需要才手动处理。"
+  },
+  {
+    "id": "claude-tmp-debug",
+    "name": "Claude Code 临时与调试残留",
+    "paths": [
+      "%USERPROFILE%\\.claude\\tmp",
+      "%USERPROFILE%\\.claude\\debug",
+      "%USERPROFILE%\\.claude\\telemetry",
+      "%USERPROFILE%\\.claude\\backups",
+      "%USERPROFILE%\\.claude\\shell-snapshots",
+      "%USERPROFILE%\\.claude\\paste-cache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "tmp/debug/telemetry/backups/shell-snapshots；官方清理步骤认可删除。"
+  },
+  {
+    "id": "claude-versions",
+    "name": "Claude Code 旧版本程序目录",
+    "paths": [
+      "%USERPROFILE%\\.local\\share\\claude\\versions"
+    ],
+    "bloatSource": "updater",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "每次升级留一个版本目录、旧版本不自动删（调研机约 0.7-0.9GB）。须保留当前版本：按子目录时间留最新一个再删其余。"
+  },
+  {
+    "id": "continue-index",
+    "name": "Continue 代码库嵌入索引",
+    "paths": [
+      "%USERPROFILE%\\.continue\\index"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "index.sqlite 无上限无 GC（社区 20-51GB、极端 300GB+；调研机 2.13GB 即 100% 占用）。删除后重开 VS Code 自动重建；根治：config.yaml 去掉 codebase provider 或配 .continueignore。"
+  },
+  {
+    "id": "continue-config",
+    "name": "Continue 配置",
+    "paths": [
+      "%USERPROFILE%\\.continue\\config.yaml",
+      "%USERPROFILE%\\.continue\\skills"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "必留。"
+  },
+  {
+    "id": "npm-cache",
+    "name": "npm 全局缓存",
+    "paths": [
+      "%LOCALAPPDATA%\\npm-cache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "Codex/dsh/pnpm 安装与更新残留（调研机 1.63GB）。推荐 npm cache clean --force；根治：npm config set cache D:\\npm-cache。"
+  },
+  {
+    "id": "claude-cli-nodejs",
+    "name": "claude-cli-nodejs 残留",
+    "paths": [
+      "%LOCALAPPDATA%\\claude-cli-nodejs"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "claude-cli 历代残留缓存目录。"
+  },
+  {
+    "id": "workbuddy-updater",
+    "name": "腾讯 WorkBuddy 更新器残留",
+    "paths": [
+      "%LOCALAPPDATA%\\@genieworkbuddy-desktop-updater",
+      "%TEMP%\\workbuddy-update-x64"
+    ],
+    "bloatSource": "updater",
+    "tier": "green",
+    "action": "clean",
+    "notes": "installer.exe 更新包残留 + TEMP 解压残留（调研机合计约 792MB 纯浪费）。"
+  },
+  {
+    "id": "workbuddy-logs",
+    "name": "腾讯 WorkBuddy 日志与追踪",
+    "paths": [
+      "%USERPROFILE%\\.workbuddy\\logs",
+      "%USERPROFILE%\\.workbuddy\\traces",
+      "%LOCALAPPDATA%\\WorkBuddy"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "按日期运行日志、OpenTelemetry 追踪、客户端 main/renderer 日志。"
+  },
+  {
+    "id": "workbuddy-plugins-cache",
+    "name": "腾讯 WorkBuddy 插件与市场缓存",
+    "paths": [
+      "%USERPROFILE%\\.workbuddy\\plugins\\cache",
+      "%USERPROFILE%\\.workbuddy\\connectors-marketplace"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "插件缓存与连接器市场缓存；删除后重下。"
+  },
+  {
+    "id": "workbuddy-core",
+    "name": "腾讯 WorkBuddy 大脑（记忆/人格/数据库）",
+    "paths": [
+      "%USERPROFILE%\\.workbuddy",
+      "%USERPROFILE%\\.workbuddy-key-fallback",
+      "%USERPROFILE%\\WorkBuddy-temp"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "SOUL/IDENTITY/USER/BOOTSTRAP.md、settings.json、workbuddy.db、sessions/memory/plans、connector-keys 全是大脑。binaries 路径硬编码，仅改环境变量不够；迁移用官方 --user-data-dir 或内置向导，或 mklink /J。WorkBuddy-temp 藏历史版本快照，删前确认。"
+  },
+  {
+    "id": "codebuddy-logs",
+    "name": "腾讯 CodeBuddy CLI 日志",
+    "paths": [
+      "%USERPROFILE%\\.codebuddy\\logs",
+      "%USERPROFILE%\\.codebuddy\\traces"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "CLI 运行日志与追踪。"
+  },
+  {
+    "id": "codebuddy-sessions",
+    "name": "腾讯 CodeBuddy CLI 会话与文件历史",
+    "paths": [
+      "%USERPROFILE%\\.codebuddy\\projects",
+      "%USERPROFILE%\\.codebuddy\\sessions",
+      "%USERPROFILE%\\.codebuddy\\history.jsonl",
+      "%USERPROFILE%\\.codebuddy\\file-history"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "删 history.jsonl 丢 /resume，删 file-history 丢 /rewind。配置目录可用 CODEBUDDY_CONFIG_DIR 搬。"
+  },
+  {
+    "id": "antigravity-updater",
+    "name": "Google Antigravity 更新器暂存",
+    "paths": [
+      "%LOCALAPPDATA%\\antigravity-updater"
+    ],
+    "bloatSource": "updater",
+    "tier": "green",
+    "action": "clean",
+    "notes": "installer.exe + pending 完整安装包（调研机 266MB）。"
+  },
+  {
+    "id": "antigravity-appdata-cache",
+    "name": "Google Antigravity Electron 缓存",
+    "paths": [
+      "%APPDATA%\\Antigravity\\Cache",
+      "%APPDATA%\\Antigravity\\Code Cache",
+      "%APPDATA%\\Antigravity\\GPUCache",
+      "%APPDATA%\\Antigravity\\DawnGraphiteCache",
+      "%APPDATA%\\Antigravity\\DawnWebGPUCache",
+      "%APPDATA%\\Antigravity\\logs",
+      "%APPDATA%\\Antigravity\\Dictionaries",
+      "%APPDATA%\\Antigravity\\Crashpad"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "Chromium/Electron 全套缓存与日志；自动重下重建。"
+  },
+  {
+    "id": "antigravity-crashes-backup",
+    "name": "Google Antigravity 崩溃与升级备份",
+    "paths": [
+      "%USERPROFILE%\\.gemini\\antigravity\\crashes",
+      "%USERPROFILE%\\.gemini\\antigravity-backup",
+      "%USERPROFILE%\\.gemini\\antigravity-ide\\crashes"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "崩溃转储与安装/升级备份（保留最近一份更稳妥，可用 30 天门限）。"
+  },
+  {
+    "id": "antigravity-conversations",
+    "name": "Google Antigravity 会话库",
+    "paths": [
+      "%USERPROFILE%\\.gemini\\antigravity\\conversations",
+      "%USERPROFILE%\\.gemini\\antigravity\\brain",
+      "%USERPROFILE%\\.gemini\\antigravity-ide"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "conversations\\<brain-id>.db 是 SQLite 会话库，删除永久不可撤销。Antigravity 忽略一切路径环境变量（含 GEMINI_HOME/GEMINI_CLI_HOME），只能 mklink /J。"
+  },
+  {
+    "id": "gemini-cli-checkpoints",
+    "name": "Gemini CLI checkpoint 影子快照",
+    "paths": [
+      "%USERPROFILE%\\.gemini\\history",
+      "%USERPROFILE%\\.gemini\\checkpoints"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "checkpointing 影子 git 快照，可重建（损失 rewind 加速）。Gemini CLI 已退役（2026-06-18 个人账户停服），确认不再用可整目录处理。"
+  },
+  {
+    "id": "gemini-cli-sessions",
+    "name": "Gemini CLI 会话历史",
+    "paths": [
+      "%USERPROFILE%\\.gemini\\tmp",
+      "%USERPROFILE%\\.gemini\\sessions"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "tmp\\<项目hash>\\chats 是会话历史；general.sessionRetention 默认 30 天。迁移走 GEMINI_CLI_HOME（注意 GEMINI_HOME 不受支持）。"
+  },
+  {
+    "id": "gemini-config",
+    "name": "Gemini/Antigravity 配置",
+    "paths": [
+      "%USERPROFILE%\\.gemini\\config",
+      "%USERPROFILE%\\.gemini\\settings.json"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "config\\mcp_config.json 是 MCP 全局配置官方位置，必留。"
+  },
+  {
+    "id": "cursor-cache",
+    "name": "Cursor Electron 缓存",
+    "paths": [
+      "%APPDATA%\\Cursor\\Cache",
+      "%APPDATA%\\Cursor\\Code Cache",
+      "%APPDATA%\\Cursor\\CachedData",
+      "%APPDATA%\\Cursor\\CachedExtensionVSIXs",
+      "%APPDATA%\\Cursor\\CachedProfilesData",
+      "%APPDATA%\\Cursor\\GPUCache",
+      "%APPDATA%\\Cursor\\Crashpad",
+      "%APPDATA%\\Cursor\\logs",
+      "%APPDATA%\\Cursor\\Backups",
+      "%APPDATA%\\Cursor\\blob_storage",
+      "%APPDATA%\\Cursor\\Dictionaries",
+      "%LOCALAPPDATA%\\Cursor"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "Electron 全套可安全删除清单（自动重下）。"
+  },
+  {
+    "id": "cursor-chat-history",
+    "name": "Cursor 聊天历史与登录态",
+    "paths": [
+      "%APPDATA%\\Cursor\\User\\workspaceStorage",
+      "%APPDATA%\\Cursor\\User\\globalStorage"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "聊天史仅存本地、删除不可恢复（社区 User\\ 超 32GB）；globalStorage\\state.vscdb 是登录态。workspaceStorage 目录名是路径哈希，改项目路径即失联。"
+  },
+  {
+    "id": "cursor-index-cli",
+    "name": "Cursor 代码索引与 CLI 会话",
+    "paths": [
+      "%USERPROFILE%\\.cursor\\index",
+      "%USERPROFILE%\\.cursor\\worktrees"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "代码库索引可重建；根治：cursor.codebaseIndexing.enabled=false。~\\.cursor\\chats 是 CLI 会话（红档，另行处理）。已知 bug：snapshots 重启后单日 44-180GB（2.5 版修复），如见 snapshots 异常膨胀优先升级。"
+  },
+  {
+    "id": "windsurf-cache",
+    "name": "Windsurf Electron 缓存",
+    "paths": [
+      "%APPDATA%\\Windsurf\\Cache",
+      "%APPDATA%\\Windsurf\\Code Cache",
+      "%APPDATA%\\Windsurf\\CachedData",
+      "%APPDATA%\\Windsurf\\CachedExtensionVSIXs",
+      "%APPDATA%\\Windsurf\\GPUCache",
+      "%APPDATA%\\Windsurf\\logs"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "Electron 全套缓存；自动重下。"
+  },
+  {
+    "id": "windsurf-cascade",
+    "name": "Windsurf Cascade 对话历史",
+    "paths": [
+      "%USERPROFILE%\\.codeium\\windsurf\\cascade",
+      "%APPDATA%\\Windsurf\\User\\globalStorage"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "Cascade .pb 是核心增长点，删 .pb 丢全部对话史；globalStorage 是登录态。无官方搬家变量，只能 junction。"
+  },
+  {
+    "id": "trae-logs",
+    "name": "Trae 日志（无轮转）",
+    "paths": [
+      "%APPDATA%\\Trae\\logs",
+      "%APPDATA%\\Trae CN\\logs"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "Trae 日志无轮转、半年十几 GB，是 C 盘爆满主因之一。"
+  },
+  {
+    "id": "trae-model-cache",
+    "name": "Trae 模型缓存",
+    "paths": [
+      "%APPDATA%\\Trae\\Cache\\ModelCache",
+      "%APPDATA%\\Trae CN\\Cache\\ModelCache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "模型缓存 15-30GB；删除后按需重下。官方 CLI 也可 trae model prune --keep-latest 2。"
+  },
+  {
+    "id": "trae-snapshots-index",
+    "name": "Trae 项目快照与工作区索引",
+    "paths": [
+      "%USERPROFILE%\\.trae\\snapshots",
+      "%USERPROFILE%\\.trae-cn\\snapshots",
+      "%APPDATA%\\Trae\\User\\workspaceStorage",
+      "%APPDATA%\\Trae CN\\User\\workspaceStorage",
+      "%USERPROFILE%\\.trae\\cache"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "快照 10-20GB、工作区索引重建即回。按 30 天门限清旧快照。"
+  },
+  {
+    "id": "trae-conversations-memory",
+    "name": "Trae 对话库与记忆",
+    "paths": [
+      "%APPDATA%\\Trae CN\\ModularData",
+      "%APPDATA%\\Trae\\ModularData",
+      "%USERPROFILE%\\.trae\\memory",
+      "%USERPROFILE%\\.trae-cn\\memory"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "ModularData\\ai-agent\\database 是 AI 对话库（社区 30GB+）；memory 是全局/项目记忆。IDE 无官方搬家变量，只能 mklink /J；CLI 有 TRAE_HOME。"
+  },
+  {
+    "id": "doubao-cache",
+    "name": "豆包 Electron 缓存",
+    "paths": [
+      "%LOCALAPPDATA%\\Doubao\\User Data\\Cache",
+      "%LOCALAPPDATA%\\Doubao\\User Data\\Code Cache",
+      "%LOCALAPPDATA%\\Doubao\\User Data\\GPUCache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "只清 Cache 系子目录；User Data 其余部分含登录态（红档勿动）。"
+  },
+  {
+    "id": "lingma-index",
+    "name": "通义灵码代码索引",
+    "paths": [
+      "%USERPROFILE%\\.lingma\\index"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "index\\meta\\v4\\index.db 社区单文件 3GB、总 10GB 案例。先结束 lingma.exe/LingmaService（锁 index.db）再删；重建损失加速。"
+  },
+  {
+    "id": "lingma-cache-logs",
+    "name": "通义灵码缓存与日志",
+    "paths": [
+      "%USERPROFILE%\\.lingma\\cache",
+      "%USERPROFILE%\\.lingma\\logs",
+      "%USERPROFILE%\\.lingma\\tmp",
+      "%LOCALAPPDATA%\\.lingma"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "completion/embedding/metrics 缓存、日志、遥测。注意：只删子目录会立刻重建膨胀，官方建议整删 ~\\.lingma（会丢登录，属红档操作，须用户自己决定）。"
+  },
+  {
+    "id": "qoder-indexdb",
+    "name": "Qoder 全局索引库",
+    "paths": [
+      "%APPDATA%\\Qoder\\indexdb"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "删时必须保留 schema_version.json 否则重建失败；社区 index.db 70GB 案例。可用 qoder cache flush --project --force。"
+  },
+  {
+    "id": "qoder-shared-client",
+    "name": "Qoder 共享客户端缓存",
+    "paths": [
+      "%LOCALAPPDATA%\\.qoder-cn\\shared_client"
+    ],
+    "bloatSource": "cache",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "用户缓存 2 个月可到 5GB。官方搬家：QODER_CONFIG_DIR。"
+  },
+  {
+    "id": "kilo-snapshots",
+    "name": "Kilo Code 影子快照仓库",
+    "paths": [
+      "%USERPROFILE%\\.local\\share\\kilo\\snapshot"
+    ],
+    "bloatSource": "index",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "每项目一个 shadow git 快照仓库（社区 100GB 案例）；内置每小时 git gc --prune=7.days，可 snapshot:false 关闭。"
+  },
+  {
+    "id": "kilo-roo-tasks",
+    "name": "Roo/Kilo 任务历史与 checkpoints",
+    "paths": [
+      "%APPDATA%\\Code\\User\\globalStorage\\roo-cline.roo-cline",
+      "%APPDATA%\\Code\\User\\globalStorage\\kilocode.kilo-code"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "tasks\\ui_messages.json + api_conversation_history.json 是任务历史（社区 checkpoints 51GB）。Roo 默认保留策略 Never、checkpoint 30 天自动清；enableCheckpoints:false 可关。"
+  },
+  {
+    "id": "codegeex-mamba",
+    "name": "CodeGeeX 本地模型运行环境",
+    "paths": [
+      "%USERPROFILE%\\.codegeex\\mamba"
+    ],
+    "bloatSource": "cache",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "本地推理环境（调研机 309.6MB）。只用云端补全可删，重装插件会重新下载。"
+  },
+  {
+    "id": "aider-cache",
+    "name": "Aider 提示词缓存",
+    "paths": [
+      "%USERPROFILE%\\.aider.cache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "hash.json 精确匹配缓存，永不过期无自动清理，可整体删。搬家：AIDER_CACHE_DIR。"
+  },
+  {
+    "id": "opencode-log",
+    "name": "OpenCode 运行日志",
+    "paths": [
+      "%USERPROFILE%\\.local\\share\\opencode\\log"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "运行日志（社区单日志 2.6GB 案例）。本机已检出该目录。"
+  },
+  {
+    "id": "opencode-sessions-db",
+    "name": "OpenCode 会话与消息库",
+    "paths": [
+      "%USERPROFILE%\\.local\\share\\opencode\\storage",
+      "%USERPROFILE%\\.local\\share\\opencode\\opencode.db",
+      "%USERPROFILE%\\.local\\share\\opencode\\snapshot",
+      "%USERPROFILE%\\.local\\share\\opencode\\tool-output"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "session/message/part JSON 无自动清理；opencode.db 为会话库。本机已检出（opencode.db 约 11MB + WAL）。搬家：OPENCODE_DATA_DIR / OPENCODE_DB。"
+  },
+  {
+    "id": "opencode-config-auth",
+    "name": "OpenCode 配置与登录态",
+    "paths": [
+      "%USERPROFILE%\\.config\\opencode",
+      "%USERPROFILE%\\.local\\share\\opencode\\auth.json",
+      "%USERPROFILE%\\.local\\share\\opencode\\mcp-auth.json"
+    ],
+    "bloatSource": "cache",
+    "tier": "red",
+    "action": "skip",
+    "notes": "auth.json/mcp-auth.json 必留（本机均已检出）；.config\\opencode 含 opencode.json 配置与用户 skills。"
+  },
+  {
+    "id": "amp-threads",
+    "name": "Google Amp 线程镜像",
+    "paths": [
+      "%USERPROFILE%\\.local\\share\\amp\\threads",
+      "%USERPROFILE%\\.local\\share\\amp\\history.jsonl"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "threads\\T-<uuid>.json 本地是服务器同步镜像且永不自动清理；secrets.json 同目录（勿动）。搬家：AMP_DATA_DIR。"
+  },
+  {
+    "id": "amp-cache-logs",
+    "name": "Google Amp 缓存与日志",
+    "paths": [
+      "%USERPROFILE%\\.cache\\amp"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "~\\.cache\\amp\\logs\\cli.log；可整体删。"
+  },
+  {
+    "id": "warp-sqlite",
+    "name": "Warp 会话回放缓冲库",
+    "paths": [
+      "%LOCALAPPDATA%\\warp\\Warp\\data\\warp.sqlite"
+    ],
+    "bloatSource": "sessions",
+    "tier": "yellow",
+    "action": "skip",
+    "notes": "blocks 表无上限无 TTL（实测 200MB-1GB+，导致启动卡死）。正确处理是 sqlite3 warp.sqlite \"DELETE FROM blocks; VACUUM;\"（保留窗口/对话/命令历史），不能直接删文件——故本工具不清理，仅提示。"
+  },
+  {
+    "id": "warp-cache-logs",
+    "name": "Warp 缓存与日志",
+    "paths": [
+      "%LOCALAPPDATA%\\warp\\Warp\\data\\logs",
+      "%LOCALAPPDATA%\\warp\\Warp\\data\\cache"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "日志与缓存目录。"
+  },
+  {
+    "id": "vscode-cache",
+    "name": "VS Code Electron 缓存（基线）",
+    "paths": [
+      "%APPDATA%\\Code\\Cache",
+      "%APPDATA%\\Code\\Code Cache",
+      "%APPDATA%\\Code\\CachedData",
+      "%APPDATA%\\Code\\CachedExtensionVSIXs",
+      "%APPDATA%\\Code\\GPUCache",
+      "%APPDATA%\\Code\\logs",
+      "%APPDATA%\\Code\\Crashpad",
+      "%APPDATA%\\Code\\Dictionaries"
+    ],
+    "bloatSource": "cache",
+    "tier": "green",
+    "action": "clean",
+    "notes": "所有 fork 型 IDE 的母体（调研机 %APPDATA%\\Code 3.77GB）。只清缓存系子目录。"
+  },
+  {
+    "id": "dsh-config",
+    "name": "dsh 配置与凭证",
+    "paths": [
+      "%USERPROFILE%\\.dsh"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": ".credentials.yaml、settings.yaml 勿删；profiles/sessions 属会话数据。Only-U 自家运行时，清理需用户明示。"
+  },
+  {
+    "id": "openclaw",
+    "name": "OpenClaw",
+    "paths": [
+      "%USERPROFILE%\\.openclaw",
+      "%USERPROFILE%\\.openclaw-dev",
+      "%USERPROFILE%\\.config\\openclaw",
+      "%USERPROFILE%\\.local\\share\\openclaw"
+    ],
+    "bloatSource": "sessions",
+    "tier": "red",
+    "action": "migrate",
+    "notes": "2026-08-23 本机现场调研：上述路径均未检出（未安装或已卸净）。若用户安装后出现，按红档处理（会话/配置类），只可迁移。"
+  },
+  {
+    "id": "hf-cli-venv",
+    "name": "HuggingFace CLI 虚拟环境",
+    "paths": [
+      "%USERPROFILE%\\.hf-cli"
+    ],
+    "bloatSource": "cache",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "venv 虚拟环境（调研机 43.7MB），可删、重新初始化。"
+  },
+  {
+    "id": "comfyui-updater",
+    "name": "ComfyUI 桌面版更新残留",
+    "paths": [
+      "%LOCALAPPDATA%\\@comfyorgcomfyui-electron-updater"
+    ],
+    "bloatSource": "updater",
+    "tier": "green",
+    "action": "clean",
+    "notes": "非编程 harness，调研时顺手记录（0.28GB 纯更新残留）。"
+  },
+  {
+    "id": "empty-shell-dirs",
+    "name": "装过未深用的空壳点目录",
+    "paths": [
+      "%USERPROFILE%\\.grok",
+      "%USERPROFILE%\\.qwen",
+      "%USERPROFILE%\\.roo",
+      "%USERPROFILE%\\.kilocode",
+      "%USERPROFILE%\\.kiro",
+      "%USERPROFILE%\\.tabnine",
+      "%USERPROFILE%\\.augment",
+      "%USERPROFILE%\\.openhands",
+      "%USERPROFILE%\\.vibe",
+      "%USERPROFILE%\\.kode",
+      "%USERPROFILE%\\.pi",
+      "%USERPROFILE%\\.moxby"
+    ],
+    "bloatSource": "cache",
+    "tier": "yellow",
+    "action": "clean",
+    "notes": "各 <0.01GB 的空壳（本机已检出 .grok/.qwen/.roo/.kilocode）。确认不再用后可整目录删；默认不动，仅在用户明示后清。"
+  }
+]
