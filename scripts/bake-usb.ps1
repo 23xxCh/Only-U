@@ -133,6 +133,11 @@ New-Item -ItemType Directory -Path $runtimeDsh -Force | Out-Null
 cmd /c "robocopy `"$Staging`" `"$runtimeDsh`" /E /COPY:DAT /MT:4 /R:1 /W:1 /NFL /NDL /NP"
 if ($LASTEXITCODE -ge 8) { throw "robocopy runtime dsh failed: $LASTEXITCODE" }
 
+# BAKE-ID：staged boot 的版本指纹（git sha + 时间），内容变化即触发本地缓存重暂存
+$bakeSha = git -C $Repo rev-parse --short HEAD 2>$null
+if (-not $bakeSha) { $bakeSha = 'nogit' }
+[IO.File]::WriteAllText((Join-Path $runtimeDsh 'BAKE-ID'), "$bakeSha-$(Get-Date -Format 'yyyyMMdd-HHmmss')")
+
 Write-Host "== 4. TUI profile + skill"
 $profSrc = Join-Path $env:USERPROFILE '.dsh\profiles\dsh-tui'
 Assert-Path (Join-Path $profSrc 'package.json') '本机没有 profile dsh-tui。先: cd dsh && pnpm dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui'
