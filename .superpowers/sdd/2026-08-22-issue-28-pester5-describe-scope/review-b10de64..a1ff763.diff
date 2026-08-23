@@ -1,0 +1,75 @@
+# Review package: b10de6419f2ac169281417affb87b7b7d38befa5..a1ff7636d914dff96dc7c50eb1a8d1f4dd3490e1
+
+## Commits
+
+a1ff763 fix: scope diagnose tests for Pester 5
+
+## Files changed
+
+ portable/tests/diagnose.Tests.ps1 | 29 ++++++++++++++++++++++++++++\-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+## Diff
+
+diff --git a/portable/tests/diagnose.Tests.ps1 b/portable/tests/diagnose.Tests.ps1
+index 5b5a578..f2174c7 100644
+--- a/portable/tests/diagnose.Tests.ps1
++++ b/portable/tests/diagnose.Tests.ps1
+@@ -1,10 +1,12 @@
++﻿Describe 'Only-U offline diagnose' {
++BeforeAll {
+ $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+ $diagnoseScript = Join-Path $repoRoot 'portable\diagnose.ps1'
+ $skillFile = Join-Path $repoRoot '.dsh\skills\only-u-ops\SKILL.md'
+ $windowsPowerShell = (Get-Command powershell -ErrorAction Stop).Source
+ 
+ function Get-Utf8Text {
+     param([byte[]]$Bytes)
+     return [System.Text.Encoding]::UTF8.GetString($Bytes)
+ }
+ 
+@@ -50,21 +52,46 @@ function Invoke-DiagnoseOutput {
+     $outputTask = $process.StandardOutput.ReadToEndAsync()
+     $errorTask = $process.StandardError.ReadToEndAsync()
+     $process.WaitForExit()
+     return [pscustomobject]@{
+         Output = $outputTask.Result
+         Error = $errorTask.Result
+         ExitCode = $process.ExitCode
+     }
+ }
+ 
+-Describe 'Only-U offline diagnose' {
++if ((Get-Module Pester).Version.Major -ge 5) {
++    $OnlyUOriginalShould = Get-Command Should
++    function Should {
++        param(
++            [Parameter(ValueFromPipeline = $true)]$ActualValue,
++            [Parameter(Position = 0)]$Operator,
++            [Parameter(Position = 1)]$ExpectedValue,
++            [Parameter(Position = 2)]$NotExpectedValue
++        )
++        process {
++            $notOperator = $Operator -eq 'Not'
++            $operator = if ($notOperator) { $ExpectedValue } else { $Operator }
++            $expected = if ($notOperator) { $NotExpectedValue } else { $ExpectedValue }
++            switch ($operator) {
++                'Be' { if ($notOperator) { $ActualValue | & $OnlyUOriginalShould -Not -Be $expected } else { $ActualValue | & $OnlyUOriginalShould -Be $expected } }
++                'BeLike' { if ($notOperator) { $ActualValue | & $OnlyUOriginalShould -Not -BeLike $expected } else { $ActualValue | & $OnlyUOriginalShould -BeLike $expected } }
++                'BeGreaterThan' { if ($notOperator) { $ActualValue | & $OnlyUOriginalShould -Not -BeGreaterThan $expected } else { $ActualValue | & $OnlyUOriginalShould -BeGreaterThan $expected } }
++                'BeLessThan' { if ($notOperator) { $ActualValue | & $OnlyUOriginalShould -Not -BeLessThan $expected } else { $ActualValue | & $OnlyUOriginalShould -BeLessThan $expected } }
++                default { throw "unsupported legacy Should operator: $operator" }
++            }
++        }
++    }
++}
++
++}
++
+     It 'translates recognized PnP driver and device states into actionable buckets' {
+         . $diagnoseScript -NoRun
+ 
+         $expected = @(
+             [pscustomobject]@{ Code = 1; Translation = $pnpUnconfigured; Bucket = 'missing-driver' },
+             [pscustomobject]@{ Code = 10; Translation = $pnpCannotStart; Bucket = 'suspected-hardware' },
+             [pscustomobject]@{ Code = 22; Translation = $pnpDisabled; Bucket = 'disabled' },
