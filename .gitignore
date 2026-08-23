@@ -15,6 +15,7 @@ build/
 *.log
 .scratch/
 wxcontext/
+token路由监控/
 portable/.env
 grok-last-copy.txt
 last-copy.txt
