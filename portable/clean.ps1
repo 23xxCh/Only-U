@@ -95,7 +95,12 @@ function Remove-EmptyChildDirectories {
     if (-not (Test-Path -LiteralPath $Path -PathType Container)) { return 0 }
     $directories = @(
         Get-ChildItem -LiteralPath $Path -Recurse -Force -Directory -ErrorAction SilentlyContinue |
-        Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0 } |
+        Where-Object {
+            ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0 -and
+            # dsh 运行时目录（如 dsh-subprocess-* spill 目录）为空是常态——溢出文件懒创建。
+            # 误删会让运行中的宿主进程在首次输出溢出时 ENOENT 崩溃（2026-08-23 实测）。
+            $_.Name -notlike 'dsh-*'
+        } |
         Sort-Object -Property FullName -Descending
     )
     $removed = 0
