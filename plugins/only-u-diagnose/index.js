@@ -13,7 +13,7 @@ export function apply(ctx, config = {}) {
       + 'TOP5 占内存进程、启动项数量、临时目录、近 7 天关键系统事件、打印机、'
       + 'PnP 驱动异常、SMART 健康。只读，不修改任何东西。'
       + '返回完整报告文本与红灯区列表，模型负责把它整理成用户能看懂的中文结论。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',

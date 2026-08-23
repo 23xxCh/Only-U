@@ -14,14 +14,11 @@ export function apply(ctx, config = {}) {
       + 'execute=true 真实删除，执行前会向用户弹出确认，未获允许绝不执行。'
       + '只清理白名单：TEMP 临时文件、缩略图缓存、WER 错误报告、Windows Update 下载缓存、回收站。'
       + '桌面/文档/下载/图片永不清理。',
-    parameters: {
-      execute: {
-        type: 'boolean',
-        required: false,
+    parameters: { type: 'object', properties: {
+      execute: { type: 'boolean',
         description: 'false=预览（只读，默认）。true=按预览清单真实删除；'
-          + '会弹出用户确认，用户拒绝则返回 denied 而不是执行。',
-      },
-    },
+          + '会弹出用户确认，用户拒绝则返回 denied 而不是执行。', }
+    } },
     output: {
       schema: {
         oneOf: [

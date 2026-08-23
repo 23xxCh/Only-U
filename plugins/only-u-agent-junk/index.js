@@ -67,7 +67,7 @@ export function apply(ctx, config = {}) {
       + 'red=会话历史/配置/登录态只可迁移）与处理建议。'
       + '只读扫描，不删任何文件；只扫 %USERPROFILE%/%LOCALAPPDATA%/%APPDATA% 下知识库已知路径，不递归全盘。'
       + '把报告转成用户可读的中文总结（按大小排序，突出大头与可立即回收项）。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: scriptResultSchema,
       render: renderScript('[AI 工具足迹扫描（只读）]\n'),
@@ -87,14 +87,11 @@ export function apply(ctx, config = {}) {
       + '红档（会话历史/配置/登录态，如 sessions/history/auth/credentials/config）'
       + '永不进入删除枚举（脚本内硬编码黑名单 + 知识库双保险）；黄档（可重建索引）不在本工具范围。'
       + 'AI 工具的会话历史视同用户文档，与 Desktop/Documents 同级保护。',
-    parameters: {
-      execute: {
-        type: 'boolean',
-        required: false,
+    parameters: { type: 'object', properties: {
+      execute: { type: 'boolean',
         description: 'false=预览（只读，默认）。true=按绿档清单真实删除；'
-          + '会弹出用户确认，用户拒绝则返回 tool-denied 而不是执行。',
-      },
-    },
+          + '会弹出用户确认，用户拒绝则返回 tool-denied 而不是执行。', }
+    } },
     output: {
       schema: { oneOf: [scriptResultSchema, deniedSchema] },
       render: renderScript(''),
@@ -135,18 +132,12 @@ export function apply(ctx, config = {}) {
       + '执行前会向用户弹出确认，未获允许绝不执行。'
       + '坑位提示：Codex 桌面版硬编码忽略 CODEX_HOME（只能 junction）；'
       + '~\\.cache\\codex-runtimes 须单独 junction（不随 CODEX_HOME 走）。',
-    parameters: {
-      targetId: {
-        type: 'string',
-        required: true,
-        description: '知识库足迹 id（来自 ops_agent_junk_scan 报告的 id 字段）',
-      },
-      destRoot: {
-        type: 'string',
-        required: true,
-        description: '目标盘根目录（如 D:\\AI-Tools），须在其他磁盘且有足够空间',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      targetId: { type: 'string',
+        description: '知识库足迹 id（来自 ops_agent_junk_scan 报告的 id 字段）', },
+      destRoot: { type: 'string',
+        description: '目标盘根目录（如 D:\\AI-Tools），须在其他磁盘且有足够空间', }
+    }, required: ['targetId', 'destRoot'] },
     output: {
       schema: { oneOf: [scriptResultSchema, deniedSchema] },
       render: renderScript(''),

@@ -57,6 +57,7 @@ public static class StubNode
             var sb = new StringBuilder();
             sb.AppendLine("ARGS=" + string.Join("|", args));
             sb.AppendLine("DSH_HOME=" + Environment.GetEnvironmentVariable("DSH_HOME"));
+            sb.AppendLine("DSH_AGENTS_HOME=" + Environment.GetEnvironmentVariable("DSH_AGENTS_HOME"));
             sb.AppendLine("DEEPSEEK_API_KEY=" + Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY"));
             sb.AppendLine("PATH=" + Environment.GetEnvironmentVariable("PATH"));
             File.WriteAllText(output, sb.ToString(), new UTF8Encoding(false));
@@ -144,6 +145,9 @@ public static class StubNode
         Assert-True ($text.Contains('runtime\dsh\profiles\dsh-tui\package.json')) 'portable\start.cmd does not check the dsh-tui profile.'
         Assert-True ($text.Contains('set "PATH=%PORTABLE_DIR%runtime\node;%PATH%"')) 'portable\start.cmd does not prepend the baked Node directory to PATH.'
         Assert-True ($text.Contains('set "DSH_HOME=%PORTABLE_DIR%runtime\dsh"')) 'portable\start.cmd does not set DSH_HOME to the baked dsh directory.'
+        Assert-True ($text.Contains('set "DSH_AGENTS_HOME=%PORTABLE_DIR%.agents-home"')) 'portable\start.cmd does not isolate DSH_AGENTS_HOME onto the USB pack.'
+        Assert-True ($text -notmatch '(?i)set\s+"USERPROFILE=') 'portable\start.cmd must not redirect USERPROFILE.'
+        Assert-True ($text -notmatch '(?i)set\s+"HOME=') 'portable\start.cmd must not redirect HOME.'
     }
 
     It 'portable start command performs an offline preflight before the Key check' {
@@ -290,6 +294,8 @@ public static class StubNode
             $expectedArgs = "$binJs|--profile|dsh-tui"
             Assert-True ($stubText.Contains("ARGS=$expectedArgs")) 'The launcher did not pass the expected arguments to the baked CLI.'
             Assert-True ($stubText.Contains("DSH_HOME=$runtimeDshDir")) 'The launcher did not set DSH_HOME to the baked dsh directory.'
+            $expectedAgentsHome = Join-Path $portableDir '.agents-home'
+            Assert-True ($stubText.Contains("DSH_AGENTS_HOME=$expectedAgentsHome")) 'The launcher did not isolate DSH_AGENTS_HOME onto the USB pack.'
             Assert-True ($stubText.Contains('DEEPSEEK_API_KEY=sk-test-key-for-unit-test')) 'The launcher did not pass DEEPSEEK_API_KEY from .env.'
             $pathLine = ($stubText -split "`r?`n") | Where-Object { $_ -like 'PATH=*' } | Select-Object -First 1
             Assert-True ($pathLine.StartsWith("PATH=$runtimeNodeDir;")) 'The launcher did not prepend the baked Node directory to PATH.'

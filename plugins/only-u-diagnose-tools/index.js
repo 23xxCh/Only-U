@@ -21,7 +21,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的第三方诊断/硬件检测工具（宽松开源协议（MIT/BSD/Apache-2.0 等）、随包分发）及各自说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。内置系统诊断请用 ops_diagnose。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -76,14 +76,11 @@ export function apply(ctx, config = {}) {
     name: 'diag_tool_run',
     description: '执行一个第三方诊断/检测工具（只读信息导出类）。'
       + '如条目标注写盘/压测风险，执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 diag_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 diag_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [

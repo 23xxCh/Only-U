@@ -56,7 +56,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的第三方系统维护工具（宽松协议、随包分发）及各自说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。内置驱动清理/运行库修复可用 maint_driver_clean / maint_dx_repair。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -111,14 +111,11 @@ export function apply(ctx, config = {}) {
     name: 'maint_tool_run',
     description: '执行一个第三方系统维护工具（写系统类）。'
       + '写系统类操作（注册表/启动项/驱动/运行库）执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 maint_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 maint_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [
@@ -205,9 +202,9 @@ export function apply(ctx, config = {}) {
     description: '驱动清理：无参数列出已安装驱动包清单（pnputil，只读）；'
       + '指定 oem 编号（如 oem12.inf）卸载该驱动包（写系统，执行前弹确认）。'
       + '适用：清理残留的旧驱动包。',
-    parameters: {
-      inf: { type: 'string', required: false, description: 'oem 编号（如 oem12.inf，来自清单输出；不指定则只列清单）' },
-    },
+    parameters: { type: 'object', properties: {
+      inf: { type: 'string', description: 'oem 编号（如 oem12.inf，来自清单输出；不指定则只列清单）' }
+    } },
     output: {
       schema: { oneOf: [scriptResultSchema, deniedSchema] },
       render: renderMaybeDenied,
@@ -229,7 +226,7 @@ export function apply(ctx, config = {}) {
     description: 'DirectX 运行库修复：从微软官方下载 dxwebsetup 并静默安装'
       + '（写系统，执行前弹确认，需要联网，安装中可能弹 UAC）。'
       + '适用：游戏/软件提示缺少 d3dx9_xx.dll 等 DirectX 组件。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: { oneOf: [scriptResultSchema, deniedSchema] },
       render: renderMaybeDenied,

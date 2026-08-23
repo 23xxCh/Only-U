@@ -41,7 +41,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的第三方网络诊断/测速工具（宽松协议、随包分发）及各自说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。内置连通性检查可用 net_wifi_scan / net_port_check。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -96,14 +96,11 @@ export function apply(ctx, config = {}) {
     name: 'net_tool_run',
     description: '执行一个第三方网络诊断/测速工具（只读/流量类）。'
       + '如条目标注大流量等风险，执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 net_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 net_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [
@@ -189,7 +186,7 @@ export function apply(ctx, config = {}) {
     name: 'net_wifi_scan',
     description: '扫描附近 Wi-Fi 网络（SSID/信号/加密）并列出已保存的 Wi-Fi 配置'
       + '（netsh，只读）。不提供明文密码查看。适用：排查无线连接问题。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: scriptResultSchema,
       render: renderScriptResult,
@@ -205,10 +202,10 @@ export function apply(ctx, config = {}) {
     description: '端口检查（只读）：指定 host+port 测试 TCP 连通性；'
       + '都不指定则列出本机监听端口及对应进程。'
       + '适用：验证某台机器端口是否开放、查看本机哪些程序在监听。',
-    parameters: {
-      host: { type: 'string', required: false, description: '目标主机名或 IP（可选）' },
-      port: { type: 'number', required: false, description: '目标端口（可选，与 host 一起用）' },
-    },
+    parameters: { type: 'object', properties: {
+      host: { type: 'string', description: '目标主机名或 IP（可选）' },
+      port: { type: 'number', description: '目标端口（可选，与 host 一起用）' }
+    } },
     output: {
       schema: scriptResultSchema,
       render: renderScriptResult,

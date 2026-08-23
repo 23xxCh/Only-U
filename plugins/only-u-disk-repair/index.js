@@ -21,7 +21,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的磁盘检测/修复工具（宽松开源协议（MIT/BSD/Apache-2.0 等）、随包分发）及各自风险说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -76,14 +76,11 @@ export function apply(ctx, config = {}) {
     name: 'disk_tool_run',
     description: '执行一个磁盘检测/修复工具。写盘/修复类操作执行前会向用户弹出确认'
       + '（工具名、参数、风险说明），未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 disk_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 disk_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [

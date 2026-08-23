@@ -41,7 +41,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的第三方硬件监测工具（宽松协议、随包分发）及各自说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。内置系统诊断请用 ops_diagnose；内置电池/GPU 快查可用 mon_battery_report / mon_nvidia_smi。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -96,14 +96,11 @@ export function apply(ctx, config = {}) {
     name: 'mon_tool_run',
     description: '执行一个第三方硬件监测工具（只读信息导出类）。'
       + '条目标注风险（如加载内核驱动）时，执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 mon_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 mon_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [
@@ -190,7 +187,7 @@ export function apply(ctx, config = {}) {
     description: '生成电池健康报告：型号、设计容量、完全充电容量、健康度、循环次数'
       + '（powercfg /batteryreport，只读，不改任何东西）。'
       + '适用：电池不耐用、续航骤降、验机查电池健康。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: scriptResultSchema,
       render: renderScriptResult,
@@ -206,7 +203,7 @@ export function apply(ctx, config = {}) {
     description: 'NVIDIA GPU 快查：型号、温度、利用率、显存占用、功耗、驱动版本'
       + '（调用系统自带的 nvidia-smi，只读，不随包分发任何 NVIDIA 组件）。'
       + '适用：怀疑显卡过热/满载；无 NVIDIA GPU 时返回提示。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: scriptResultSchema,
       render: renderScriptResult,

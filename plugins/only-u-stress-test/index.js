@@ -56,7 +56,7 @@ export function apply(ctx, config = {}) {
     description: '列出可调度的第三方压测/烤机/基准工具（宽松协议、随包分发）及各自说明。'
       + '只能列出与调度；未通过验证或文件缺失的工具标记为不可调度'
       + '（可以建议用户手动打开，但不能替你执行）。压测前建议先用 ops_diagnose 看散热基线。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: {
         type: 'object',
@@ -111,14 +111,11 @@ export function apply(ctx, config = {}) {
     name: 'stress_tool_run',
     description: '执行一个第三方压测/基准工具（高负载类）。'
       + '压测/基准为高负载操作，可能引起过热、降频甚至蓝屏，执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {
-      tool: { type: 'string', required: true, description: '工具 id（来自 stress_tool_list）' },
-      params: {
-        type: 'object',
-        required: false,
-        description: '知识库模板允许的填充参数（仅字符串/数字）',
-      },
-    },
+    parameters: { type: 'object', properties: {
+      tool: { type: 'string', description: '工具 id（来自 stress_tool_list）' },
+      params: { type: 'object', additionalProperties: true,
+        description: '知识库模板允许的填充参数（仅字符串/数字）', }
+    }, required: ['tool'] },
     output: {
       schema: {
         oneOf: [
@@ -204,7 +201,7 @@ export function apply(ctx, config = {}) {
     name: 'stress_winsat',
     description: '运行 Windows 自带 winsat graphics GPU 图形基准（高负载，约 1-3 分钟，'
       + 'GPU 满载期间屏幕可能卡顿）。执行前会向用户弹出确认，未获允许绝不执行。',
-    parameters: {},
+    parameters: { type: 'object', properties: {} },
     output: {
       schema: { oneOf: [scriptResultSchema, deniedSchema] },
       render: renderMaybeDenied,

@@ -4,6 +4,8 @@ setlocal EnableExtensions
 set "PORTABLE_DIR=%~dp0"
 set "NODE_EXE=%PORTABLE_DIR%runtime\node\node.exe"
 set "DSH_HOME=%PORTABLE_DIR%runtime\dsh"
+rem Do not load host ~/.agents skills; USB-only user-agents root
+set "DSH_AGENTS_HOME=%PORTABLE_DIR%.agents-home"
 set "DSH_BIN=%DSH_HOME%\lib\bin.js"
 set "DSH_PROFILE=%DSH_HOME%\profiles\dsh-tui\package.json"
 set "ENV_FILE=%PORTABLE_DIR%.env"
@@ -143,7 +145,7 @@ if exist "%CACHE_ID%" if exist "%STAGE_ROOT%\dsh\lib\bin.js" if exist "%STAGE_RO
   if not errorlevel 1 set "NEED_STAGE="
 )
 if not defined NEED_STAGE goto :stage_links
-echo 正在准备本地运行环境（仅此一次，约 1-3 分钟）...
+echo 正在准备本地运行环境（仅此一次，通常几秒）...
 robocopy "%PORTABLE_DIR%runtime\node" "%STAGE_ROOT%\node" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP /MT:8 /XF BAKE-ID >nul
 if errorlevel 8 goto :eof
 robocopy "%DSH_HOME%" "%STAGE_ROOT%\dsh" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP /MT:8 /XD "%DSH_HOME%\sessions" "%DSH_HOME%\.agent-presets" /XF BAKE-ID >nul

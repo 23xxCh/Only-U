@@ -9,8 +9,8 @@ Read `CONTEXT.md` at the repo root and use those terms. Do not invent synonyms.
 
 ## What to do
 
-1. **优先调用 Only-U 注册的工具**（见下方 Tools 节），而不是临时拼 shell 命令。
-2. 在 TUI **运维会话一开始**，先调用 `ops_diagnose`，再调用 `ops_clean`（execute=false，仅预览）；把两段输出都展示给人。
+1. **优先调用 Only-U 注册的工具**（见下方 Tools 节），而不是临时拼 shell 命令。不要先列工具清单。
+2. **按意图选路径，不要会话一开始就体检。** 「C盘满了 / 空间不够 / 清理」→ 禁止 `ops_diagnose`；先用一行 CIM 查 C: 剩余，再 `ops_clean`（execute=false）。只有用户要「全面检查 / 电脑怎么了」或 `/diagnose` 时才调用 `ops_diagnose`。
 3. **诊断**只读：总结磁盘、内存与占内存进程、启动项线索、临时目录、近期 System 错误、打印机和驱动状态异常；不要结束进程、安装驱动或修改系统。
 4. **清理**默认只预览。只有用户明确说“确认”“执行”或同等明确确认后，才调用 `ops_clean`（execute=true）。`ops_clean` 执行前会弹出**确认条**，那是最终门：模型说了不算，用户没在确认条上允许就不执行。未确认时绝不执行，不推荐第三方一键清理或注册表清理。
 5. Never delete Desktop, Documents, Downloads, or Pictures. That is **误删防护**.
