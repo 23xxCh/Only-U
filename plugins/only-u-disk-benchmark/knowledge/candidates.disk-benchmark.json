@@ -1,0 +1,52 @@
+[
+  {
+    "id": "crystaldiskmark",
+    "name": "CrystalDiskMark",
+    "version": "待定",
+    "category": "磁盘基准",
+    "description": "磁盘顺序/随机读写测速（GUI，用户自行点测）",
+    "risk": "写盘基准（会写临时测试文件）；GUI 启动后由用户自行操作",
+    "exe": "tools\\crystaldiskmark\\DiskMark64.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": {
+      "0": "ok"
+    },
+    "timeoutMs": 1800000,
+    "maxOutBytes": 524288,
+    "tier": "green",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "顺序/随机 IOPS 专业基准，PowerShell 不可达",
+      "license": "MIT（hiyohiyo/CrystalDiskMark，793 star；注意：GitHub 仓库无 LICENSE 文件，仅官网许可页声明 MIT，收录时需下载留存许可页证据）",
+      "cliEvidence": "源码分析：无 CLI 接口，启动 GUI 供用户操作；待实测便携运行与退出行为"
+    },
+    "rejected": true,
+    "rejectedReason": "GUI-only：无 headless CLI，违反 ADR-0007 第 3 条（2026-08-23 评审）；如需启用须找到官方 CLI 通道并重审"
+  },
+  {
+    "id": "diskspd",
+    "name": "DiskSpd",
+    "version": "待定",
+    "category": "磁盘基准",
+    "description": "微软官方磁盘读写吞吐/IOPS 基准（CLI，可自动化）",
+    "risk": "写盘基准（会写临时测试文件）",
+    "exe": "tools\\diskspd\\diskspd.exe",
+    "argTemplate": [],
+    "outPattern": null,
+    "exitCodes": {
+      "0": "ok"
+    },
+    "timeoutMs": 900000,
+    "maxOutBytes": 524288,
+    "tier": "red",
+    "verified": false,
+    "schedulable": false,
+    "audit": {
+      "capability": "磁盘读写吞吐/IOPS 专业基准（-b/-o/-t/-d 等参数），PowerShell 不可达",
+      "license": "MIT（microsoft/diskspd）",
+      "cliEvidence": "CLI 参数已文档化（-b128K -o32 -t1 -d10 -L 等），待实测固定 argTemplate 与退出码"
+    }
+  }
+]
