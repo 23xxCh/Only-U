@@ -116,7 +116,7 @@ $xd.Add((Join-Path $Repo 'wxcontext'))
 $xd.Add('node_modules')
 # 客户盘不带开发仓库：源码/文档/测试/工具都经专门步骤落盘
 # （dsh runtime 走 step 3、profile+skill 走 step 4、presets 走 step 5）
-foreach ($dev in @('.claude', '.scratch', '.dsh', 'dsh', 'dsh-tui', 'docs', 'plugins', 'presets', 'scripts', 'tests')) { $xd.Add($dev) }
+foreach ($dev in @('.claude', '.scratch', '.dsh', 'dsh', 'dsh-tui', 'docs', 'plugins', 'presets', 'scripts', 'tests', '插件和文档')) { $xd.Add($dev) }
 Get-ChildItem -LiteralPath $Repo -Directory | Where-Object { $_.Name -like 'token*' } | ForEach-Object { [void]$xd.Add($_.FullName) }
 $roboArgs = @($Repo, $Dest, '/E', '/COPY:DAT', '/R:1', '/W:1', '/NFL', '/NDL', '/NP')
 foreach ($d in $xd) { $roboArgs += '/XD'; $roboArgs += $d }
