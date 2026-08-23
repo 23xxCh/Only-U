@@ -158,18 +158,36 @@ export class OutputCollector {
       this.discardSpill()
       return
     }
-    if (this.spillFd === undefined) {
-      // Random suffix + O_EXCL + no-follow-equivalent ('wx' fails on any
-      // existing path, symlink or not) + owner-only mode: defeats spill-path
-      // prediction and symlink planting in shared tmp dirs.
-      this.spillFile = join(
-        this.spillDir,
-        `dsh-subprocess-${process.pid}-${++spillCounter}-${randomBytes(6).toString('hex')}-${this.label}.log`,
-      )
-      this.spillFd = openSync(this.spillFile, 'wx', 0o600)
-      for (const prior of this.chunks) writeSync(this.spillFd, prior)
+    try {
+      if (this.spillFd === undefined) {
+        // Random suffix + O_EXCL + no-follow-equivalent ('wx' fails on any
+        // existing path, symlink or not) + owner-only mode: defeats spill-path
+        // prediction and symlink planting in shared tmp dirs.
+        this.spillFile = join(
+          this.spillDir,
+          `dsh-subprocess-${process.pid}-${++spillCounter}-${randomBytes(6).toString('hex')}-${this.label}.log`,
+        )
+        this.spillFd = openSync(this.spillFile, 'wx', 0o600)
+        for (const prior of this.chunks) writeSync(this.spillFd, prior)
+      }
+      writeSync(this.spillFd, chunk)
+    } catch {
+      // The spill file is a best-effort head archive, never worth the host:
+      // its directory can vanish mid-stream (temp cleaner sweeping the empty
+      // mkdtemp dir before the first overflow lazily creates the file), and
+      // this runs inside a stream 'data' handler where a throw kills the
+      // process. Drop to the in-memory tail and keep collecting.
+      if (this.spillFd !== undefined) {
+        try {
+          closeSync(this.spillFd)
+        } catch {
+          // already closed or unusable
+        }
+      }
+      this.spillFd = undefined
+      this.spillFile = undefined
+      this.spillDisabled = true
     }
-    writeSync(this.spillFd, chunk)
   }
 
   /** Stop spilling and remove the file once it can no longer hold the complete stream. */
