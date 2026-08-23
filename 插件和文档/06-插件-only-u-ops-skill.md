@@ -26,6 +26,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const name = 'only-u-ops-skill'
+// 硬性要求：直取 ctx 服务必须声明 inject（缺了启动失败，见总设计 4.8）
+export const inject = ['skills']
 
 export function apply(ctx) {
   const pkgDir = dirname(fileURLToPath(import.meta.url))
