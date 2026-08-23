@@ -10,6 +10,7 @@
 4. [`adr/`](adr/) — 已拍板决策
    - [0003](adr/0003-dsh-tui-agent-shell.md) 有网壳是 dsh-TUI 插件
    - [0005](adr/0005-usb-baked-dsh-runtime.md) **U 盘密封运行时（已采纳）**
+   - [0008](adr/0008-host-compat-deferred.md) 客户机兼容：本场只保 Win10/11 x64，其余赛后分阶段
    - [0004](adr/0004-dev-base-dsh-tui.md) 是把 TUI 源码快照入库的提案，**不覆盖 0005**
 5. [`agents/`](agents/) — Issue / 标签 / 给合作者 agent 的入口
 
