@@ -216,6 +216,23 @@ Write-Launcher 'Start-Agent.cmd' $wrap
 $wrapWipe = "@echo off`r`nsetlocal`r`ncd /d `"%~dp0`"`r`nwhere pwsh >nul 2>&1`r`nif %ERRORLEVEL%==0 (`r`n  pwsh -NoProfile -ExecutionPolicy Bypass -File `"%~dp0portable\wipe-records.ps1`" %*`r`n) else (`r`n  powershell -NoProfile -ExecutionPolicy Bypass -File `"%~dp0portable\wipe-records.ps1`" %*`r`n)`r`nset `"WIPE_EXIT=%ERRORLEVEL%`"`r`nif not `"%WIPE_EXIT%`"==`"0`" (`r`n  echo.`r`n  pause`r`n)`r`nexit /b %WIPE_EXIT%`r`n"
 Write-Launcher '清空维修记录.cmd' $wrapWipe
 
+Write-Host '== 6b. LICENSE / NOTICE'
+foreach ($lic in @('LICENSE', 'NOTICE')) {
+  Copy-Item -LiteralPath (Join-Path $Repo $lic) -Destination (Join-Path $Dest $lic) -Force
+}
+foreach ($pair in @(
+  @{ Src = (Join-Path $Repo 'dsh\LICENSE'); Dst = (Join-Path $runtimeDsh 'LICENSE') },
+  @{ Src = (Join-Path $Repo 'dsh-tui\LICENSE'); Dst = (Join-Path $runtimeDsh 'LICENSE-dsh-tui') }
+)) {
+  if (Test-Path -LiteralPath $pair.Src) {
+    Copy-Item -LiteralPath $pair.Src -Destination $pair.Dst -Force
+  }
+}
+$nodeLicense = Join-Path (Split-Path $nodeSrc) 'LICENSE'
+if (Test-Path -LiteralPath $nodeLicense) {
+  Copy-Item -LiteralPath $nodeLicense -Destination (Join-Path $runtimeNode 'LICENSE') -Force
+}
+
 $nodeOut = Join-Path $runtimeNode 'node.exe'
 $binOut = Join-Path $runtimeDsh 'lib\bin.js'
 Write-Host '== 校验 CLI --help'

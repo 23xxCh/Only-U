@@ -63,6 +63,12 @@ Only-U 仅用于获得授权的本机电脑运维。执行清理前请核对预�
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) —— Agent 内核
 - [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) —— 终端运维壳
 
+## 版权与商业化
+
+Only-U 原创代码（`portable/`、`plugins/`、`.dsh/`、`scripts/`、盘根启动器及本仓库文档）采用 [MIT](LICENSE) 许可，版权所有 © 2026 陈熙贤。
+
+允许个人使用、二次开发，也允许**商业销售烤好的 U 盘**。再分发（含卖盘）必须保留本仓库的 `LICENSE`、`NOTICE`，以及 `dsh/LICENSE` 与 `dsh-tui/LICENSE`。本许可不授予 Only-U 商标；API Key 不随仓库分发。第三方清单见 [NOTICE](NOTICE)。
+
 ## 问题反馈
 
 问题与建议请提交 [GitHub Issues](https://github.com/23xxCh/Only-U/issues)。

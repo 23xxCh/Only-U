@@ -39,3 +39,5 @@ TUI 里的常用入口
   不要输入 /update。
   不要把 portable\.env 发到 GitHub 或聊天里。
   重复双击只会开一个窗口。
+
+版权 (c) 2026 陈熙贤。MIT 许可，详见 LICENSE 与 NOTICE。

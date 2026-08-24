@@ -1,0 +1,28 @@
+Only-U
+Copyright (c) 2026 陈熙贤
+Licensed under the MIT License. See LICENSE.
+
+This file lists third-party components bundled with Only-U. Their original
+licenses are unchanged and must be retained when redistributing (including
+baked USB copies).
+
+DeepSeek Harness (dsh/)
+  MIT License
+  Copyright (c) 2026 DeepSeek
+  Full text: dsh/LICENSE
+  https://github.com/deepseek-ai/deepseek-harness
+
+dsh-TUI
+  MIT License
+  Copyright (c) 2026, chimney (ccch1mneyyy)
+  Full text: dsh-tui/LICENSE
+  https://github.com/ccch1mneyyy/dsh-TUI
+
+Node.js runtime (portable/runtime/node/, baked onto USB, not in git)
+  Node.js license (MIT-style) and OpenSSL exception
+  Copy the LICENSE that ships with the Node.js distribution next to node.exe
+  https://github.com/nodejs/node/blob/main/LICENSE
+
+Third-party repair binaries
+  None are currently bundled. Future tools must pass ADR-0007 (commercial
+  redistribution allowed) and ship with their own LICENSE next to the binary.

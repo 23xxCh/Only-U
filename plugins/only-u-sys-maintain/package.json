@@ -1,6 +1,7 @@
 {
   "name": "only-u-sys-maintain",
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "main": "index.js",
   "files": ["index.js", "cordis.patch.yml", "lib", "knowledge", "tools", "assets"],
