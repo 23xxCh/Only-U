@@ -1,0 +1,28 @@
+{
+  "name": "only-u-dark",
+  "displayName": "修机台（深）",
+  "base": "dark",
+  "colors": {
+    "text": "#E8E4DC",
+    "inverseText": "#141311",
+    "inactive": "#9A9488",
+    "subtle": "#7A756C",
+    "claude": "#7A9A84",
+    "claudeShimmer": "#A3B8A8",
+    "permission": "#E85D4C",
+    "permissionShimmer": "#F08A7A",
+    "promptBorder": "#5A564C",
+    "promptBorderShimmer": "#7A9A84",
+    "success": "#6FA87A",
+    "error": "#E85D4C",
+    "warning": "#D4A017",
+    "warningShimmer": "#E0B84A",
+    "suggestion": "#7A9A84",
+    "remember": "#E8E4DC",
+    "background": "#1A1916",
+    "selectionBg": "#2A2824",
+    "autoAccept": "#7A9A84",
+    "planMode": "#6FA87A",
+    "ide": "#7A9A84"
+  }
+}

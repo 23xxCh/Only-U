@@ -1,5 +1,6 @@
 ﻿# Bake a host-independent Only-U USB pack.
-# Run on a dev machine that already has: pnpm, built dsh/, profile dsh-tui.
+# Run on a dev machine that already has: pnpm, built dsh/.
+# TUI comes from this repo's compiled dsh-tui 0.8.8, not the live host profile.
 # Usage: powershell -File scripts\bake-usb.ps1 -Dest F:\Only-U
 param(
   [Parameter(Mandatory = $false)]
@@ -12,6 +13,7 @@ $Dsh = Join-Path $Repo 'dsh'
 $Staging = Join-Path $env:TEMP 'only-u-dsh-deploy'
 $GitBin = 'C:\Program Files\Git\bin'
 if (Test-Path $GitBin) { $env:Path = "$GitBin;$env:Path" }
+. (Join-Path $PSScriptRoot 'bake-tui.ps1')
 
 function Assert-Path($path, $hint) {
   if (-not (Test-Path -LiteralPath $path)) { throw $hint }
@@ -133,18 +135,9 @@ New-Item -ItemType Directory -Path $runtimeDsh -Force | Out-Null
 cmd /c "robocopy `"$Staging`" `"$runtimeDsh`" /E /COPY:DAT /MT:4 /R:1 /W:1 /NFL /NDL /NP"
 if ($LASTEXITCODE -ge 8) { throw "robocopy runtime dsh failed: $LASTEXITCODE" }
 
-# BAKE-ID：staged boot 的版本指纹（git sha + 时间），内容变化即触发本地缓存重暂存
-$bakeSha = git -C $Repo rev-parse --short HEAD 2>$null
-if (-not $bakeSha) { $bakeSha = 'nogit' }
-[IO.File]::WriteAllText((Join-Path $runtimeDsh 'BAKE-ID'), "$bakeSha-$(Get-Date -Format 'yyyyMMdd-HHmmss')")
-
-Write-Host "== 4. TUI profile + skill"
-$profSrc = Join-Path $env:USERPROFILE '.dsh\profiles\dsh-tui'
-Assert-Path (Join-Path $profSrc 'package.json') '本机没有 profile dsh-tui。先: cd dsh && pnpm dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui'
-$profDst = Join-Path $runtimeDsh 'profiles\dsh-tui'
-New-Item -ItemType Directory -Path $profDst -Force | Out-Null
-cmd /c "robocopy `"$profSrc`" `"$profDst`" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NP"
-if ($LASTEXITCODE -ge 8) { throw "robocopy profile failed: $LASTEXITCODE" }
+Write-Host "== 4. compile dsh-tui + Dest profile (no live clone)"
+Invoke-DshTuiCompile -Repo $Repo
+Install-DestTuiProfile -Repo $Repo -Dest $Dest -NodeExe $nodeSrc -DshBin (Join-Path $Staging 'lib\bin.js')
 $skillSrcDir = Join-Path $Repo '.dsh\skills\only-u-ops'
 $skillDst = Join-Path $runtimeDsh 'skills\only-u-ops'
 New-Item -ItemType Directory -Path $skillDst -Force | Out-Null
@@ -154,11 +147,7 @@ if (Test-Path -LiteralPath $reportFormat) {
   Copy-Item -LiteralPath $reportFormat -Destination (Join-Path $skillDst 'REPORT-FORMAT.md') -Force
 }
 
-$envSrc = Join-Path $Repo 'portable\.env'
-$envDst = Join-Path $Dest 'portable\.env'
-if ((Test-Path $envSrc) -and -not (Test-Path $envDst)) {
-  Copy-Item -LiteralPath $envSrc -Destination $envDst
-}
+Write-Host '   skip copying portable\.env (paste Key in start.cmd; do not bake secrets)'
 
 Write-Host "== 5. agent-presets 实体拷贝（FAT32 无 junction，修 U 盘 agent 零工具 P0）"
 $presetSrc = Join-Path $runtimeDsh 'config\agent-presets'
@@ -206,7 +195,7 @@ Copy-Item -LiteralPath (Join-Path $Repo 'portable\start.cmd') -Destination (Join
 function Write-Launcher($name, $body) {
   [IO.File]::WriteAllText((Join-Path $Dest $name), $body, $gbk)
 }
-$wrap = "@echo off`r`ntitle Only-U 维修智能体`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\start.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
+$wrap = "@echo off`r`ntitle Only-U 修机台`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\start.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 $wrapDiag = "@echo off`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\diagnose.cmd`" %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 $wrapClean = "@echo off`r`ncd /d `"%~dp0`"`r`ncall `"%~dp0portable\clean.cmd`" -Interactive %*`r`nif errorlevel 1 pause`r`nexit /b %ERRORLEVEL%`r`n"
 Write-Launcher '诊断.cmd' $wrapDiag
@@ -240,6 +229,12 @@ $helpOut = & $nodeOut $binOut --help 2>&1
 $helpExit = $LASTEXITCODE
 $helpOut | Select-Object -First 8
 if ($helpExit -ne 0) { throw "baked CLI --help failed: $helpExit" }
+
+Write-Host '== 断言烤盘 TUI'
+Assert-BakedTui -Dest $Dest
+
+Write-Host '== BAKE-ID（断言通过后才写）'
+Write-BakeId -Repo $Repo -RuntimeDsh $runtimeDsh
 
 Write-Host ''
 Write-Host "烤盘完成: $Dest"

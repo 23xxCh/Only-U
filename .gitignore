@@ -16,7 +16,9 @@ build/
 .scratch/
 wxcontext/
 token路由监控/
+docs/requirements-source/
 portable/.env
+portable/.agents-home/
 portable/.dsh-home/
 portable/reports/
 portable/logs/

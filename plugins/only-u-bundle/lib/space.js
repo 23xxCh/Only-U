@@ -80,10 +80,14 @@ function SpaceScene({ React, ui, close }) {
   })
 
   const el = React.createElement
-  const bw = Math.max(10, Math.min(30, (columns ?? 80) - 32))
+  const cols = columns ?? 80
+  const narrow = cols < 80
+  const bw = Math.max(10, Math.min(30, cols - 32))
 
   const rows = [
-    el(Text, { key: 'title', bold: true }, ' Only-U 电脑状态（r 刷新 · Esc/q 退出）'),
+    el(Text, { key: 'title', bold: true }, narrow
+      ? ' C 盘（Esc 返回）'
+      : ' Only-U 电脑状态（r 刷新 · Esc/q 退出）'),
     el(Text, { key: 'pad', children: ' ' }),
   ]
   if (error) {
@@ -92,6 +96,17 @@ function SpaceScene({ React, ui, close }) {
   }
   if (!data) {
     rows.push(el(Text, { key: 'loading' }, ' 正在读取电脑状态…'))
+    return el(Box, { flexDirection: 'column', paddingX: 1, children: rows })
+  }
+
+  if (narrow) {
+    const c = (data.disks ?? []).find((d) => /^C:/i.test(d.id))
+    if (!c) {
+      rows.push(el(Text, { key: 'c-miss' }, ' 还没读到 C 盘'))
+    } else {
+      rows.push(el(Text, { key: 'c', bold: true }, ` C 盘  ${c.used} / ${c.total} GB`))
+      rows.push(el(Text, { key: 'c-bar', children: `  ${bar(c.used, c.total, Math.max(10, cols - 8))}` }))
+    }
     return el(Box, { flexDirection: 'column', paddingX: 1, children: rows })
   }
 

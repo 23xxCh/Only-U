@@ -327,7 +327,7 @@ const dict = {
   'mode-plan-unavailable': { zh: '当前 preset 未注册 /plan 命令，无法切换计划模式', en: 'The active preset does not register /plan; cannot toggle plan mode' },
 
   // ── components/LogoV2.tsx ───────────────────────────────────────────
-  'logo-tagline': { zh: '探索未至之境！', en: 'Explore the uncharted!' },
+  'logo-tagline': { zh: '下一步：正在自动诊断与清理预览；看完后输入「确认」才删除', en: 'Auto diagnose and clean preview; type 确认 to delete' },
   'logo-tip-prefix': { zh: '提示：', en: 'Tip: ' },
   'logo-tip-more': { zh: '更多技巧', en: 'more tips' },
   // Upstream-drift notice (merged one-liner under the tip; copy explains

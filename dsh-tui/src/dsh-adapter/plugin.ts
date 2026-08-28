@@ -882,6 +882,10 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     // `/update` to act on; source checkouts and `--config` overlays get the
     // unavailable notice instead.
     onUpdate: profile === undefined ? undefined : () => {
+      if (process.env.DSH_TUI_NO_UPDATE === '1') {
+        channel.notify('U盘版不自动更新', { color: 'warning' })
+        return
+      }
       if (exited || updateRequested) return
       // Confirm the target version before tearing the TUI down: on an
       // already-latest install, an unconditional update+restart would churn
@@ -932,13 +936,16 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // Check in the background so registry latency never delays the first frame.
   // A failed/offline check is intentionally silent; the manual `/update`
   // command remains available regardless of network access.
-  void checkForTuiUpdate().then((update) => {
-    if (update === undefined || exited || updateRequested) return
-    channel.notify(
-      t('update-available', { current: update.current, latest: update.latest }),
-      { color: 'warning', timeoutMs: 12000 },
-    )
-  })
+  // Only-U USB sets DSH_TUI_NO_UPDATE=1 — baked runtime must not self-upgrade.
+  if (process.env.DSH_TUI_NO_UPDATE !== '1') {
+    void checkForTuiUpdate().then((update) => {
+      if (update === undefined || exited || updateRequested) return
+      channel.notify(
+        t('update-available', { current: update.current, latest: update.latest }),
+        { color: 'warning', timeoutMs: 12000 },
+      )
+    })
+  }
 
   // If the surrounding tree goes down (reload, teardown), unmount the UI —
   // but flag it as teardown first so the settling waitUntilExit does not

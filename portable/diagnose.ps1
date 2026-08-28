@@ -582,3 +582,8 @@ if ($nextSteps.Count -eq 0) {
     Write-Output ''
     Write-Output '处理不了？带 U 盘去维修店，给师傅看 reports\ 下的 diagnose-*.log。'
 }
+
+Write-Output ''
+Write-Output '能清多少：见上方可回收空间；本次未删除任何文件。'
+Write-Output '不碰什么：桌面 / 文档 / 下载 / 图片 / 聊天记录。'
+Write-Output '说确认才删：只有你说「确认」或「执行」才会清理。'

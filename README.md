@@ -28,7 +28,7 @@ Only-U 是一款搭载在普通 U 盘内的即插即用电脑运维工具，内�
 
 3. **清理预览**：双击 `portable\clean.cmd`，先只预览可回收空间与文件清单，不删除任何文件；核对无误后再运行 `portable\clean.cmd -Execute` 执行清理（或使用 `-Interactive` 逐项确认）。桌面、文档、下载等用户资料默认不在清理范围内。
 
-4. **启动 AI Agent（有网时）**：双击 `portable\start.cmd`，拉起 dsh-TUI 运维终端。首次运行会把运行时预热到本地缓存（通常几秒，此后秒开）；按提示粘贴 DeepSeek API Key（保存在 `portable\.env`）。直接对它说「C 盘满了，帮我看看」，Agent 会调用与上面相同的运维脚本，先复述预览内容，经你确认后才执行清理。也可以在 TUI 里输入 `/provider` 换成自己的模型。
+4. **启动 AI Agent（有网时）**：双击 `portable\start.cmd`（或盘根 `启动Agent.cmd`），拉起 dsh-TUI。本点击不整包拷贝运行时：本地缓存的 BAKE-ID 与 U 盘一致就用缓存，否则直接从 U 盘跑。没有 Key 时粘贴一次即写入 `portable\.env`。TUI 打开后**自己跑**诊断 + 清理预览（不经模型，全文写入 `portable\logs\boot-latest.txt`）；看完三行「能清多少 / 不碰什么 / 说确认才删」后，输入「确认」或「执行」才会真正清理。没网仍可输入 `/clean` 选确认清理，或用盘根 `诊断.cmd`。也可以在 TUI 里输入 `/provider` 换成自己的模型。
 
 **TUI 常用命令**
 
@@ -50,7 +50,7 @@ Only-U 是一款搭载在普通 U 盘内的即插即用电脑运维工具，内�
 - 仅支持 Windows 10/11，Mac / Ubuntu 本场不提供。
 - 清理默认只预览，执行必须显式确认（`-Execute` / `-Interactive`）。
 - `portable\.env` 里保存 API Key，不要发到 GitHub 或聊天。
-- TUI 内不要输入 `/update`；重复双击 `start.cmd` 只会打开一个窗口。
+- TUI 内不要输入 `/update`。启动器本点击不 robocopy、不 ping、不查进程；缓存未就绪就直接用 U 盘上的 Node。
 - 客户机无需安装 Node、npm 或任何开发环境，运行时随 U 盘提供。
 - TUI 只加载 U 盘上的 skill / 插件（不读客户机 `~/.agents`）。诊断脚本仍使用本机用户目录，以便清理真正的临时文件。
 

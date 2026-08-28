@@ -51,11 +51,14 @@ BeforeAll {
 }
 
 Describe 'diagnose 报告尾部「接下来怎么办」' {
-    It '全部正常：输出体检通过行，不带固定结尾行' {
+    It '全部正常：输出体检通过行，不带处理不了行，带固定三行' {
         $out = Invoke-Diagnose
         $out | Should -BeLike '*=== 接下来怎么办 ===*'
         $out | Should -BeLike '*系统体检通过，未见红灯。建议 30 天后再查一次。*'
         $out | Should -Not -BeLike '*处理不了？*'
+        $out | Should -BeLike '*能清多少*'
+        $out | Should -BeLike '*不碰什么*'
+        $out | Should -BeLike '*说确认才删*'
     }
 
     It 'C 盘剩余 <5%：输出清理建议行' {

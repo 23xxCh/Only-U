@@ -8,6 +8,9 @@ $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $cutoff = (Get-Date).AddDays(-7)
+$scanFileLimit = 20000
+$scanTimeoutSeconds = 8
+$script:LastScanSkipped = $false
 
 function Format-Bytes([long]$n) {
     if ($n -ge 1GB) { return ('{0:N1} GB' -f ($n / 1GB)) }
@@ -46,8 +49,54 @@ function Get-ChildFiles {
         [string]$Path,
         [string]$Pattern = '*'
     )
+    $script:LastScanSkipped = $false
     if (-not (Test-Path -LiteralPath $Path -PathType Container)) { return @() }
-    return @(Get-ChildItem -LiteralPath $Path -Recurse -Force -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like $Pattern })
+    $root = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    if ($null -eq $root) { return @() }
+    if (($root.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { return @() }
+
+    $files = New-Object 'System.Collections.Generic.List[System.IO.FileInfo]'
+    $stack = New-Object System.Collections.Stack
+    $stack.Push($root)
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    while ($stack.Count -gt 0) {
+        if ($stopwatch.Elapsed.TotalSeconds -ge $scanTimeoutSeconds -or $files.Count -ge $scanFileLimit) {
+            $script:LastScanSkipped = $true
+            break
+        }
+        $directory = $stack.Pop()
+        if (($directory.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
+        try {
+            foreach ($file in $directory.GetFiles($Pattern)) {
+                if ($stopwatch.Elapsed.TotalSeconds -ge $scanTimeoutSeconds -or $files.Count -ge $scanFileLimit) {
+                    $script:LastScanSkipped = $true
+                    break
+                }
+                $files.Add($file)
+            }
+            if ($script:LastScanSkipped) { break }
+            foreach ($child in $directory.GetDirectories()) {
+                if (($child.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0) {
+                    $stack.Push($child)
+                }
+            }
+        } catch [System.UnauthorizedAccessException] {
+            continue
+        } catch [System.IO.IOException] {
+            continue
+        }
+    }
+    return @($files.ToArray())
+}
+
+function Show-ScanCap {
+    param(
+        [string]$Path,
+        [int]$Count
+    )
+    if (-not $script:LastScanSkipped) { return }
+    Write-Output ('跳过：太大或超时（已扫 {0} 个文件）' -f $Count)
+    Add-Log ('skip capped: {0} files={1}' -f $Path, $Count)
 }
 
 function Select-ByAge {
@@ -215,7 +264,10 @@ foreach ($dir in $tempAllowList) {
         continue
     }
 
-    $selection = Select-ByAge (Get-ChildFiles $dir)
+    Write-Output ('正在扫描 {0}' -f $dir)
+    $scanned = @(Get-ChildFiles $dir)
+    Show-ScanCap $dir $scanned.Count
+    $selection = Select-ByAge $scanned
     $summary = Get-PlanSummary $selection.OldFiles
     Show-Category 'TEMP' $dir '' $summary $selection.NewFiles.Count $true
     $totalPlanned += $summary.Bytes
@@ -240,7 +292,9 @@ foreach ($dir in $tempAllowList) {
 
 foreach ($dir in $thumbnailDirectories) {
     if (Test-Protected $dir) { $blocked += $dir; continue }
-    $files = Get-ChildFiles $dir 'thumbcache_*.db'
+    Write-Output ('正在扫描 {0}' -f $dir)
+    $files = @(Get-ChildFiles $dir 'thumbcache_*.db')
+    Show-ScanCap $dir $files.Count
     $summary = Get-PlanSummary $files
     Show-Category 'THUMBNAIL CACHE' $dir 'thumbcache_*.db; Windows will rebuild it' $summary
     $totalPlanned += $summary.Bytes
@@ -262,7 +316,9 @@ foreach ($dir in $thumbnailDirectories) {
 
 foreach ($dir in $werDirectories) {
     if (Test-Protected $dir) { $blocked += $dir; continue }
-    $files = Get-ChildFiles $dir
+    Write-Output ('正在扫描 {0}' -f $dir)
+    $files = @(Get-ChildFiles $dir)
+    Show-ScanCap $dir $files.Count
     $summary = Get-PlanSummary $files
     Show-Category 'WER REPORTS' $dir 'contents only; report directory itself is preserved' $summary
     $totalPlanned += $summary.Bytes
@@ -284,7 +340,9 @@ foreach ($dir in $werDirectories) {
 
 foreach ($dir in $updateDirectories) {
     if (Test-Protected $dir) { $blocked += $dir; continue }
-    $files = Get-ChildFiles $dir
+    Write-Output ('正在扫描 {0}' -f $dir)
+    $files = @(Get-ChildFiles $dir)
+    Show-ScanCap $dir $files.Count
     $summary = Get-PlanSummary $files
     Show-Category 'WINDOWS UPDATE CACHE' $dir '清空后已下载更新需重下' $summary
     $totalPlanned += $summary.Bytes
@@ -307,7 +365,9 @@ foreach ($dir in $updateDirectories) {
 if (Test-Protected $recycleBinDirectory) {
     $blocked += $recycleBinDirectory
 } else {
-    $files = Get-ChildFiles $recycleBinDirectory
+    Write-Output ('正在扫描 {0}' -f $recycleBinDirectory)
+    $files = @(Get-ChildFiles $recycleBinDirectory)
+    Show-ScanCap $recycleBinDirectory $files.Count
     $summary = Get-PlanSummary $files
     Show-Category 'RECYCLE BIN' "$env:SystemDrive Recycle Bin" 'emptied only with -Execute' $summary
     $totalPlanned += $summary.Bytes

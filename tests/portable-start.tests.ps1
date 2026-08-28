@@ -111,7 +111,14 @@ public static class StubNode
             } else {
                 $line = "`"$Command`" > `"$OutputPath`" 2>&1"
             }
-            cmd /d /c $line
+            cmd /d /c "$line"
+            $LASTEXITCODE
+        }
+
+        function Invoke-CaptureWithInput {
+            param([string]$Command, [string]$OutputPath, [string]$InputLine)
+            $line = "echo $InputLine| `"$Command`" > `"$OutputPath`" 2>&1"
+            cmd /d /c "$line"
             $LASTEXITCODE
         }
     }
@@ -148,14 +155,19 @@ public static class StubNode
         Assert-True ($text.Contains('set "DSH_AGENTS_HOME=%PORTABLE_DIR%.agents-home"')) 'portable\start.cmd does not isolate DSH_AGENTS_HOME onto the USB pack.'
         Assert-True ($text -notmatch '(?i)set\s+"USERPROFILE=') 'portable\start.cmd must not redirect USERPROFILE.'
         Assert-True ($text -notmatch '(?i)set\s+"HOME=') 'portable\start.cmd must not redirect HOME.'
+        Assert-True ($text.Contains('set "DSH_TUI_NO_UPDATE=1"')) 'portable\start.cmd does not set DSH_TUI_NO_UPDATE=1.'
+        Assert-True ($text.Contains('theme copy failed')) 'portable\start.cmd does not echo a visible theme-copy failure.'
+        Assert-True ($text.Contains('lib\types\components\LogoV2.js')) 'portable\start.cmd does not compare cache vs USB LogoV2.js.'
     }
 
-    It 'portable start command performs an offline preflight before the Key check' {
+    It 'portable start command prompts for an empty Key and points offline users to diagnose.cmd' {
         $text = Read-Text $StartCmd $Gbk
-        $networkIndex = $text.IndexOf('ping -n 1 -w 2000 223.5.5.5')
         $keyIndex = $text.IndexOf('set "DEEPSEEK_API_KEY="')
-        Assert-True ($networkIndex -ge 0) 'portable\start.cmd is missing the ping offline preflight.'
-        Assert-True ($keyIndex -gt $networkIndex) 'portable\start.cmd must run the offline preflight before the Key check.'
+        $promptIndex = $text.IndexOf('set /p DEEPSEEK_API_KEY=')
+        $writeIndex = $text.IndexOf('>"%ENV_FILE%" echo DEEPSEEK_API_KEY=%DEEPSEEK_API_KEY%')
+        Assert-True ($keyIndex -ge 0) 'portable\start.cmd is missing the Key load.'
+        Assert-True ($promptIndex -gt $keyIndex) 'portable\start.cmd must prompt for an empty Key after loading .env.'
+        Assert-True ($writeIndex -gt $promptIndex) 'portable\start.cmd must persist a pasted Key to .env.'
         Assert-True ($text.Contains('diagnose.cmd')) 'portable\start.cmd does not point offline users to diagnose.cmd.'
     }
 
@@ -166,20 +178,14 @@ public static class StubNode
         Assert-True ($text -notmatch '(?i)headless') 'portable\start.cmd still references the headless profile.'
     }
 
-    It 'portable start command inspects node command lines for an exact DSH launcher match' {
+    It 'portable start command skips ping, CIM, robocopy, and tasklist on this click' {
         $text = Read-Text $StartCmd $Gbk
-        Assert-True ($text.Contains('Get-CimInstance -ClassName Win32_Process')) 'portable\start.cmd does not query Windows process command lines through CIM.'
-        Assert-True ($text.Contains('CommandLine')) 'portable\start.cmd does not inspect process command lines.'
-        Assert-True ($text.Contains('set "ONLY_U_DSH_BIN=%RUN_BIN%"')) 'portable\start.cmd does not compare process command lines with the launcher exact DSH path.'
-        Assert-True ($text.Contains("-Filter 'Name = ''node.exe'''")) 'portable\start.cmd does not limit duplicate inspection to node.exe processes.'
-        Assert-True ($text -notmatch '(?i)tasklist') 'portable\start.cmd must not use tasklist for command-line duplicate detection.'
-        Assert-True ($text.Contains('exit 42')) 'portable\start.cmd does not use a dedicated duplicate-match exit code.'
-        Assert-True ($text.Contains('set "DSH_GUARD_EXIT=%ERRORLEVEL%"')) 'portable\start.cmd does not capture the duplicate-query exit code immediately.'
-        Assert-True ($text.Contains('if "%DSH_GUARD_EXIT%"=="42"')) 'portable\start.cmd does not block only the dedicated duplicate-match exit code.'
-        $alreadyRunning = 'DSH TUI ' + (-join [char[]]@(0x5DF2, 0x5728, 0x8FD0, 0x884C))
-        $recoveryGuidance = -join [char[]]@(0x8BF7, 0x5173, 0x95ED, 0x90A3, 0x4E2A, 0x7A97, 0x53E3, 0xFF08, 0x6216, 0x7ED3, 0x675F, 0x5176, 0x4E2D, 0x7684, 0x20, 0x6E, 0x6F, 0x64, 0x65, 0x2E, 0x65, 0x78, 0x65, 0xFF09, 0x518D, 0x8BD5, 0x3002)
-        Assert-True ($text.Contains($alreadyRunning)) 'portable\start.cmd does not say that DSH TUI is already running.'
-        Assert-True ($text.Contains($recoveryGuidance)) 'portable\start.cmd does not give the full Task Manager recovery guidance.'
+        Assert-True ($text -notmatch '(?i)\bping\b') 'portable\start.cmd must not ping on the hot path.'
+        Assert-True ($text -notmatch '(?i)Get-CimInstance') 'portable\start.cmd must not query CIM on the hot path.'
+        Assert-True ($text -notmatch '(?i)Win32_Process') 'portable\start.cmd must not inspect process command lines on the hot path.'
+        Assert-True ($text -notmatch '(?i)robocopy "') 'portable\start.cmd must not robocopy on this click.'
+        Assert-True ($text -notmatch '(?i)tasklist') 'portable\start.cmd must not use tasklist.'
+        Assert-True ($text.Contains('Never robocopy on this click')) 'portable\start.cmd does not document the no-robocopy hot path.'
     }
 
     It 'portable start command does not use PID-file duplicate tracking' {
@@ -316,102 +322,212 @@ public static class StubNode
             Assert-True (Test-Path -LiteralPath $stubOutput -PathType Leaf) 'Start-Agent.cmd did not invoke portable\start.cmd.'
         }
 
-        It 'continues normal launch when the duplicate-process query fails' {
-            $fakePowerShell = Join-Path $runtimeNodeDir 'powershell.exe'
-            $queryFailureOutput = Join-Path $tempRoot 'query-failure-output.txt'
-            New-StubNode $fakePowerShell
-
-            $oldOutput = $env:ONLY_U_TEST_STUB_OUTPUT
-            $env:ONLY_U_TEST_STUB_OUTPUT = $queryFailureOutput
+        It 'exits when Key is empty after the prompt' {
+            New-Item -ItemType Directory -Path $runtimeNodeDir -Force | Out-Null
+            New-Item -ItemType Directory -Path $runtimeBinDir -Force | Out-Null
+            New-Item -ItemType Directory -Path $runtimeProfileDir -Force | Out-Null
+            if (-not (Test-Path -LiteralPath $nodeExe)) { New-StubNode $nodeExe }
+            Set-Content -LiteralPath $binJs -Value '' -Encoding ASCII
+            Set-Content -LiteralPath $profileJson -Value '{}' -Encoding ASCII
+            if (Test-Path -LiteralPath $envFile) { Remove-Item -LiteralPath $envFile -Force }
+            $oldKey = $env:DEEPSEEK_API_KEY
+            Remove-Item Env:\DEEPSEEK_API_KEY -ErrorAction SilentlyContinue
+            $outputFile = Join-Path $tempRoot 'empty-key-output.txt'
             try {
-                $outputFile = Join-Path $tempRoot 'query-failure-launcher-output.txt'
-                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile
-                $output = [System.IO.File]::ReadAllText($outputFile, $Gbk)
+                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile -SendNewline
+            }
+            finally {
+                if ($null -eq $oldKey) { Remove-Item Env:\DEEPSEEK_API_KEY -ErrorAction SilentlyContinue } else { $env:DEEPSEEK_API_KEY = $oldKey }
+            }
+            $output = [System.IO.File]::ReadAllText($outputFile, $Gbk)
+            Assert-Equal 1 $exitCode 'An empty Key should exit with code 1.'
+            Assert-True ($output.Contains('diagnose.cmd')) 'An empty Key should point to diagnose.cmd.'
+            Assert-True (-not (Test-Path -LiteralPath $envFile)) 'An empty Key must not write .env.'
+        }
+
+        It 'writes a pasted Key to .env and starts the TUI' {
+            New-Item -ItemType Directory -Path $runtimeNodeDir -Force | Out-Null
+            New-Item -ItemType Directory -Path $runtimeBinDir -Force | Out-Null
+            New-Item -ItemType Directory -Path $runtimeProfileDir -Force | Out-Null
+            if (-not (Test-Path -LiteralPath $nodeExe)) { New-StubNode $nodeExe }
+            Set-Content -LiteralPath $binJs -Value '' -Encoding ASCII
+            Set-Content -LiteralPath $profileJson -Value '{}' -Encoding ASCII
+            if (Test-Path -LiteralPath $envFile) { Remove-Item -LiteralPath $envFile -Force }
+            if (Test-Path -LiteralPath $stubOutput) { Remove-Item -LiteralPath $stubOutput -Force }
+            $oldOutput = $env:ONLY_U_TEST_STUB_OUTPUT
+            $env:ONLY_U_TEST_STUB_OUTPUT = $stubOutput
+            try {
+                $outputFile = Join-Path $tempRoot 'pasted-key-output.txt'
+                $exitCode = Invoke-CaptureWithInput (Join-Path $portableDir 'start.cmd') $outputFile 'sk-pasted-key-for-unit-test'
             }
             finally {
                 $env:ONLY_U_TEST_STUB_OUTPUT = $oldOutput
-                if (Test-Path -LiteralPath $fakePowerShell) { Remove-Item -LiteralPath $fakePowerShell -Force }
             }
 
-            Assert-Equal 0 $exitCode 'A failed duplicate-process query should fail open and launch dsh-tui.'
-            Assert-True (Test-Path -LiteralPath $queryFailureOutput -PathType Leaf) 'A failed duplicate-process query should still invoke the baked Node executable.'
-            Assert-True ($output -notmatch 'DSH TUI') 'A failed duplicate-process query must not show the duplicate-TUI block.'
-        }
-
-        It 'does not block an unrelated node command line' {
-            $unrelatedScript = Join-Path $runtimeBinDir 'unrelated.js'
-            $fakeReadyFile = Join-Path $tempRoot 'unrelated-node-ready.txt'
-            $unrelatedOutput = Join-Path $tempRoot 'unrelated-node-launch-output.txt'
-            $unrelatedNode = $null
-            Set-Content -LiteralPath $unrelatedScript -Value '' -Encoding ASCII
-
-            try {
-                $fakeArguments = @($unrelatedScript, "--only-u-test-ready=$fakeReadyFile", '--only-u-test-wait') | ForEach-Object { ConvertTo-QuotedProcessArgument $_ }
-                $unrelatedNode = Start-Process -FilePath $nodeExe -ArgumentList $fakeArguments -PassThru
-                $deadline = [DateTime]::UtcNow.AddSeconds(5)
-                while (-not (Test-Path -LiteralPath $fakeReadyFile) -and [DateTime]::UtcNow -lt $deadline) {
-                    Start-Sleep -Milliseconds 25
-                }
-                Assert-True (Test-Path -LiteralPath $fakeReadyFile -PathType Leaf) 'The unrelated fake node.exe did not start.'
-
-                $oldOutput = $env:ONLY_U_TEST_STUB_OUTPUT
-                $env:ONLY_U_TEST_STUB_OUTPUT = $unrelatedOutput
-                try {
-                    $outputFile = Join-Path $tempRoot 'unrelated-node-launcher-output.txt'
-                    $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile
-                }
-                finally {
-                    $env:ONLY_U_TEST_STUB_OUTPUT = $oldOutput
-                }
-            }
-            finally {
-                if ($null -ne $unrelatedNode) {
-                    $unrelatedNode.Refresh()
-                    if (-not $unrelatedNode.HasExited) {
-                        Stop-Process -Id $unrelatedNode.Id -Force
-                        $unrelatedNode.WaitForExit()
-                    }
-                }
-            }
-
-            Assert-Equal 0 $exitCode 'An unrelated node.exe command line should not block dsh-tui.'
-            Assert-True (Test-Path -LiteralPath $unrelatedOutput -PathType Leaf) 'An unrelated node.exe command line should still launch the baked Node executable.'
-        }
-
-        It 'blocks a second launcher when its DSH TUI command line is already running' {
-            $fakeReadyFile = Join-Path $tempRoot 'duplicate-node-ready.txt'
-            $fakeNode = $null
-
-            try {
-                $fakeArguments = @($binJs, '--profile', 'dsh-tui', "--only-u-test-ready=$fakeReadyFile", '--only-u-test-wait') | ForEach-Object { ConvertTo-QuotedProcessArgument $_ }
-                $fakeNode = Start-Process -FilePath $nodeExe -ArgumentList $fakeArguments -PassThru
-                $deadline = [DateTime]::UtcNow.AddSeconds(5)
-                while (-not (Test-Path -LiteralPath $fakeReadyFile) -and [DateTime]::UtcNow -lt $deadline) {
-                    Start-Sleep -Milliseconds 25
-                }
-                Assert-True (Test-Path -LiteralPath $fakeReadyFile -PathType Leaf) 'The duplicate-test fake node.exe did not start.'
-
-                $outputFile = Join-Path $tempRoot 'duplicate-tui-output.txt'
-                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile -SendNewline
-                $output = [System.IO.File]::ReadAllText($outputFile, $Gbk)
-                Assert-True ($exitCode -ne 0) 'A duplicate DSH TUI launcher should exit with a nonzero code.'
-                Assert-True ($output.Contains('DSH TUI')) 'Duplicate DSH TUI launcher should explain that DSH TUI is already running.'
-            }
-            finally {
-                if ($null -ne $fakeNode) {
-                    $fakeNode.Refresh()
-                    if (-not $fakeNode.HasExited) {
-                        Stop-Process -Id $fakeNode.Id -Force
-                        $fakeNode.WaitForExit()
-                    }
-                }
-            }
+            Assert-Equal 0 $exitCode 'A pasted Key should start dsh-tui successfully.'
+            Assert-True (Test-Path -LiteralPath $envFile -PathType Leaf) 'A pasted Key should create portable\.env.'
+            $saved = [System.IO.File]::ReadAllText($envFile)
+            Assert-True ($saved.Contains('DEEPSEEK_API_KEY=sk-pasted-key-for-unit-test')) 'portable\.env did not store the pasted Key.'
+            Assert-True ($saved.Contains('DEEPSEEK_BASE_URL=https://api.deepseek.com')) 'portable\.env did not store the default base URL.'
+            Assert-True (Test-Path -LiteralPath $stubOutput -PathType Leaf) 'A pasted Key should still invoke the baked Node executable.'
+            $stubText = [System.IO.File]::ReadAllText($stubOutput, [System.Text.Encoding]::UTF8)
+            Assert-True ($stubText.Contains('DEEPSEEK_API_KEY=sk-pasted-key-for-unit-test')) 'The launcher did not pass the pasted Key to the process environment.'
         }
 
         AfterAll {
             if (Test-Path -LiteralPath $tempRoot) {
                 Remove-Item -LiteralPath $tempRoot -Recurse -Force
             }
+        }
+    }
+
+    Context 'theme copy and staged boot' {
+        BeforeAll {
+            $stageRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("only-u-stage-tests-" + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
+        }
+
+        AfterAll {
+            if (Test-Path -LiteralPath $stageRoot) {
+                Remove-Item -LiteralPath $stageRoot -Recurse -Force
+            }
+        }
+
+        It 'echoes a theme copy failure and still starts the TUI' {
+            $pack = Join-Path $stageRoot 'theme-fail'
+            $portableDir = Join-Path $pack 'portable'
+            $runtimeNodeDir = Join-Path $portableDir 'runtime\node'
+            $runtimeBinDir = Join-Path $portableDir 'runtime\dsh\lib'
+            $runtimeProfileDir = Join-Path $portableDir 'runtime\dsh\profiles\dsh-tui'
+            $themeDir = Join-Path $portableDir 'themes'
+            $fakeUser = Join-Path $pack 'fake-user'
+            New-Item -ItemType Directory -Path $runtimeNodeDir, $runtimeBinDir, $runtimeProfileDir, $themeDir, (Join-Path $fakeUser '.dsh-tui') -Force | Out-Null
+            Copy-Item -LiteralPath $StartCmd -Destination (Join-Path $portableDir 'start.cmd')
+            New-StubNode (Join-Path $runtimeNodeDir 'node.exe')
+            Set-Content -LiteralPath (Join-Path $runtimeBinDir 'bin.js') -Value '' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $runtimeProfileDir 'package.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $themeDir 'only-u.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $themeDir 'only-u-dark.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $portableDir '.env') -Value "DEEPSEEK_API_KEY=sk-test-key-for-unit-test`r`n" -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $fakeUser '.dsh-tui\themes') -Value 'not-a-directory' -Encoding ASCII
+
+            $oldUser = $env:USERPROFILE
+            $env:USERPROFILE = $fakeUser
+            try {
+                $outputFile = Join-Path $pack 'theme-fail-output.txt'
+                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile
+                $output = [System.IO.File]::ReadAllText($outputFile, $Gbk)
+            }
+            finally {
+                $env:USERPROFILE = $oldUser
+            }
+
+            Assert-Equal 0 $exitCode 'Theme copy failure must still start the TUI.'
+            Assert-True ($output.Contains('theme copy failed')) 'Theme copy failure must be visible.'
+        }
+
+        It 'uses USB runtime this click when cache LogoV2.js differs, without robocopy' {
+            $pack = Join-Path $stageRoot 'logo-mismatch'
+            $portableDir = Join-Path $pack 'portable'
+            $runtimeNodeDir = Join-Path $portableDir 'runtime\node'
+            $runtimeDshDir = Join-Path $portableDir 'runtime\dsh'
+            $runtimeBinDir = Join-Path $runtimeDshDir 'lib'
+            $runtimeProfileDir = Join-Path $runtimeDshDir 'profiles\dsh-tui'
+            $usbTuiRoot = Join-Path $runtimeProfileDir 'node_modules\@deepseek-harness-tui\dsh-tui'
+            $usbTui = Join-Path $usbTuiRoot 'lib\types\components'
+            $stubOutput = Join-Path $pack 'stub-output.txt'
+            New-Item -ItemType Directory -Path $runtimeNodeDir, $runtimeBinDir, $usbTui -Force | Out-Null
+            Copy-Item -LiteralPath $StartCmd -Destination (Join-Path $portableDir 'start.cmd')
+            New-StubNode (Join-Path $runtimeNodeDir 'node.exe')
+            Set-Content -LiteralPath (Join-Path $runtimeBinDir 'bin.js') -Value '' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $runtimeProfileDir 'package.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $usbTuiRoot 'package.json') -Value '{"version":"0.8.8"}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $usbTui 'LogoV2.js') -Value "renderBigText('ONLY-U-USB')" -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $runtimeDshDir 'BAKE-ID') -Value 'bake-test-1' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $portableDir '.env') -Value "DEEPSEEK_API_KEY=sk-test-key-for-unit-test`r`n" -Encoding ASCII
+
+            $localApp = Join-Path $pack 'localapp'
+            $cacheRoot = Join-Path $localApp 'Only-U\cache'
+            $cacheTuiRoot = Join-Path $cacheRoot 'dsh\profiles\dsh-tui\node_modules\@deepseek-harness-tui\dsh-tui'
+            $cacheTui = Join-Path $cacheTuiRoot 'lib\types\components'
+            New-Item -ItemType Directory -Path (Join-Path $cacheRoot 'node'), (Join-Path $cacheRoot 'dsh\lib'), (Join-Path $cacheRoot 'dsh\profiles\dsh-tui'), $cacheTui -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $runtimeNodeDir 'node.exe') -Destination (Join-Path $cacheRoot 'node\node.exe')
+            Set-Content -LiteralPath (Join-Path $cacheRoot 'dsh\lib\bin.js') -Value '' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheRoot 'dsh\profiles\dsh-tui\package.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheTuiRoot 'package.json') -Value '{"version":"0.8.8"}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheTui 'LogoV2.js') -Value "renderBigText('ONLY-U-STALE')" -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheRoot 'BAKE-ID') -Value 'bake-test-1' -Encoding ASCII
+
+            $oldLocal = $env:LOCALAPPDATA
+            $oldOutput = $env:ONLY_U_TEST_STUB_OUTPUT
+            $env:LOCALAPPDATA = $localApp
+            $env:ONLY_U_TEST_STUB_OUTPUT = $stubOutput
+            try {
+                $outputFile = Join-Path $pack 'mismatch-output.txt'
+                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile
+            }
+            finally {
+                $env:LOCALAPPDATA = $oldLocal
+                $env:ONLY_U_TEST_STUB_OUTPUT = $oldOutput
+            }
+
+            Assert-Equal 0 $exitCode 'LogoV2 mismatch should still start from USB this click.'
+            $stale = [System.IO.File]::ReadAllText((Join-Path $cacheTui 'LogoV2.js'))
+            Assert-True ($stale.Contains('ONLY-U-STALE')) 'Cache LogoV2.js must be left unchanged; no robocopy this click.'
+            $stubText = [System.IO.File]::ReadAllText($stubOutput, [System.Text.Encoding]::UTF8)
+            $usbBin = Join-Path $runtimeBinDir 'bin.js'
+            Assert-True ($stubText.Contains("ARGS=$usbBin|--profile|dsh-tui")) 'LogoV2 mismatch must launch USB bin.js, not the stale cache.'
+        }
+
+        It 'uses the local cache node when BAKE-ID and LogoV2.js already match' {
+            $pack = Join-Path $stageRoot 'cache-hit'
+            $portableDir = Join-Path $pack 'portable'
+            $runtimeNodeDir = Join-Path $portableDir 'runtime\node'
+            $runtimeDshDir = Join-Path $portableDir 'runtime\dsh'
+            $runtimeBinDir = Join-Path $runtimeDshDir 'lib'
+            $runtimeProfileDir = Join-Path $runtimeDshDir 'profiles\dsh-tui'
+            $usbTuiRoot = Join-Path $runtimeProfileDir 'node_modules\@deepseek-harness-tui\dsh-tui'
+            $usbTui = Join-Path $usbTuiRoot 'lib\types\components'
+            $stubOutput = Join-Path $pack 'stub-output.txt'
+            New-Item -ItemType Directory -Path $runtimeNodeDir, $runtimeBinDir, $usbTui -Force | Out-Null
+            Copy-Item -LiteralPath $StartCmd -Destination (Join-Path $portableDir 'start.cmd')
+            New-StubNode (Join-Path $runtimeNodeDir 'node.exe')
+            Set-Content -LiteralPath (Join-Path $runtimeBinDir 'bin.js') -Value '' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $runtimeProfileDir 'package.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $usbTuiRoot 'package.json') -Value '{"version":"0.8.8"}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $usbTui 'LogoV2.js') -Value "renderBigText('ONLY-U-USB')" -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $runtimeDshDir 'BAKE-ID') -Value 'bake-test-1' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $portableDir '.env') -Value "DEEPSEEK_API_KEY=sk-test-key-for-unit-test`r`n" -Encoding ASCII
+
+            $localApp = Join-Path $pack 'localapp'
+            $cacheRoot = Join-Path $localApp 'Only-U\cache'
+            $cacheTuiRoot = Join-Path $cacheRoot 'dsh\profiles\dsh-tui\node_modules\@deepseek-harness-tui\dsh-tui'
+            $cacheTui = Join-Path $cacheTuiRoot 'lib\types\components'
+            $cacheBin = Join-Path $cacheRoot 'dsh\lib\bin.js'
+            New-Item -ItemType Directory -Path (Join-Path $cacheRoot 'node'), (Join-Path $cacheRoot 'dsh\lib'), (Join-Path $cacheRoot 'dsh\profiles\dsh-tui'), $cacheTui -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $runtimeNodeDir 'node.exe') -Destination (Join-Path $cacheRoot 'node\node.exe')
+            Set-Content -LiteralPath $cacheBin -Value '' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheRoot 'dsh\profiles\dsh-tui\package.json') -Value '{}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheTuiRoot 'package.json') -Value '{"version":"0.8.8"}' -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheTui 'LogoV2.js') -Value "renderBigText('ONLY-U-USB')" -Encoding ASCII
+            Set-Content -LiteralPath (Join-Path $cacheRoot 'BAKE-ID') -Value 'bake-test-1' -Encoding ASCII
+
+            $oldLocal = $env:LOCALAPPDATA
+            $oldOutput = $env:ONLY_U_TEST_STUB_OUTPUT
+            $env:LOCALAPPDATA = $localApp
+            $env:ONLY_U_TEST_STUB_OUTPUT = $stubOutput
+            try {
+                $outputFile = Join-Path $pack 'cache-hit-output.txt'
+                $exitCode = Invoke-Capture (Join-Path $portableDir 'start.cmd') $outputFile
+            }
+            finally {
+                $env:LOCALAPPDATA = $oldLocal
+                $env:ONLY_U_TEST_STUB_OUTPUT = $oldOutput
+            }
+
+            Assert-Equal 0 $exitCode 'Matching cache should start dsh-tui.'
+            $stubText = [System.IO.File]::ReadAllText($stubOutput, [System.Text.Encoding]::UTF8)
+            Assert-True ($stubText.Contains("ARGS=$cacheBin|--profile|dsh-tui")) 'Matching BAKE-ID and LogoV2.js must launch the cached bin.js.'
         }
     }
 }

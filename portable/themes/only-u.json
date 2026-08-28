@@ -1,0 +1,28 @@
+{
+  "name": "only-u",
+  "displayName": "修机台",
+  "base": "light",
+  "colors": {
+    "text": "#2C2A26",
+    "inverseText": "#F4EFE6",
+    "inactive": "#7A756C",
+    "subtle": "#9A9488",
+    "claude": "#3D5C4A",
+    "claudeShimmer": "#5A7A66",
+    "permission": "#B42318",
+    "permissionShimmer": "#C94A3A",
+    "promptBorder": "#8A8478",
+    "promptBorderShimmer": "#3D5C4A",
+    "success": "#2F6B45",
+    "error": "#B42318",
+    "warning": "#B8860B",
+    "warningShimmer": "#D4A017",
+    "suggestion": "#3D5C4A",
+    "remember": "#2C2A26",
+    "background": "#3D5C4A",
+    "selectionBg": "#E8E0D4",
+    "autoAccept": "#5A7A66",
+    "planMode": "#2F6B45",
+    "ide": "#3D5C4A"
+  }
+}
